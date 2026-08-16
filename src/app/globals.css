@@ -1,0 +1,139 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #f5f5f5;
+  color: #1a1a1a;
+}
+
+.halaman-laporan {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+}
+
+section {
+  margin-bottom: 24px;
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+section h2 {
+  font-size: 1rem;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.tombol-foto {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.tombol-foto button,
+.location-info button,
+.location-error button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.tombol-foto button:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
+.photo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.photo-preview-item {
+  position: relative;
+}
+
+.photo-preview-item img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.photo-preview-item button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(220, 38, 38, 0.9);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+.photo-preview-empty {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.location-info p,
+.koordinat-kecil {
+  margin: 4px 0;
+  font-size: 0.9rem;
+}
+
+.koordinat-kecil {
+  color: #666;
+}
+
+.location-error {
+  color: #b91c1c;
+}
+
+.tombol-kirim {
+  width: 100%;
+  padding: 14px;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.tombol-kirim:disabled {
+  background: #86efac;
+  cursor: not-allowed;
+}
+
+.pesan-status {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 0.9rem;
+}

@@ -1,0 +1,112 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Seismogram from '../../components/Seismogram';
+import NavTabs from '../../components/NavTabs';
+import { supabase } from '../../lib/supabaseClient';
+
+/**
+ * Halaman ini murni untuk MEMBACA data — tidak ada tombol edit atau hapus
+ * sama sekali di UI, dan Supabase (lewat RLS di supabase-schema.sql) memang
+ * sengaja tidak diberi izin UPDATE/DELETE untuk kunci publik, jadi data
+ * yang sudah masuk tidak bisa diubah siapa pun lewat aplikasi ini.
+ */
+export default function HalamanRiwayat() {
+  const [laporanList, setLaporanList] = useState([]);
+  const [status, setStatus] = useState('loading'); // loading | ready | error
+
+  useEffect(() => {
+    async function ambilData() {
+      setStatus('loading');
+      const { data, error } = await supabase
+        .from('laporan')
+        .select('*, foto_laporan(id, url)')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error(error);
+        setStatus('error');
+        return;
+      }
+
+      setLaporanList(data || []);
+      setStatus('ready');
+    }
+
+    ambilData();
+  }, []);
+
+  return (
+    <>
+      <header className="app-header">
+        <div className="app-header-inner">
+          <h1 className="app-title">Lapor Dampak Gempa</h1>
+          <p className="app-subtitle">
+            Laporan lapangan tercatat lokasi &amp; waktu otomatis
+          </p>
+          <Seismogram />
+          <NavTabs />
+        </div>
+      </header>
+
+      <main className="halaman-riwayat">
+        <span className="riwayat-badge">Hanya lihat &middot; tidak bisa diubah</span>
+
+        {status === 'loading' && (
+          <p className="riwayat-loading">Memuat data laporan…</p>
+        )}
+
+        {status === 'error' && (
+          <p className="riwayat-error">
+            Gagal memuat data. Periksa koneksi atau coba muat ulang halaman.
+          </p>
+        )}
+
+        {status === 'ready' && laporanList.length === 0 && (
+          <p className="riwayat-kosong">Belum ada laporan yang masuk.</p>
+        )}
+
+        {status === 'ready' &&
+          laporanList.map((laporan) => (
+            <article key={laporan.id} className="kartu-laporan">
+              <div className="kartu-laporan-header">
+                <p className="kartu-laporan-waktu">
+                  {new Date(laporan.created_at).toLocaleString('id-ID', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                  })}
+                </p>
+                <p className="kartu-laporan-lokasi">
+                  {laporan.desa_kelurahan}, {laporan.kecamatan}
+                  <br />
+                  {laporan.kabupaten_kota}
+                </p>
+                <p className="kartu-laporan-koordinat">
+                  {laporan.latitude?.toFixed(6)}, {laporan.longitude?.toFixed(6)}
+                </p>
+              </div>
+
+              {laporan.deskripsi && (
+                <p className="kartu-laporan-deskripsi">{laporan.deskripsi}</p>
+              )}
+
+              {laporan.foto_laporan?.length > 0 && (
+                <div className="kartu-laporan-foto-grid">
+                  {laporan.foto_laporan.map((foto) => (
+                    <a
+                      key={foto.id}
+                      href={foto.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <img src={foto.url} alt="Foto laporan" loading="lazy" />
+                    </a>
+                  ))}
+                </div>
+              )}
+            </article>
+          ))}
+      </main>
+    </>
+  );
+}

@@ -33,7 +33,8 @@ export default function HalamanLaporan() {
     setLokasi(data);
   }, []);
 
-  const siapUntukVideo = Boolean(lokasi) && namaPelapor.trim() !== '' && noHp.trim() !== '' && photos.length > 0;
+  // Video opsional, jadi tidak termasuk di sini — hanya syarat wajib.
+  const wajibLengkap = Boolean(lokasi) && namaPelapor.trim() !== '' && noHp.trim() !== '' && photos.length > 0;
 
   const prosesFotoBaru = async (file) => {
     if (!lokasi) {
@@ -261,13 +262,13 @@ export default function HalamanLaporan() {
         <section>
           <p className="section-eyebrow">05 &middot; Video (opsional)</p>
           <div className="tombol-foto">
-            <VideoCapture onCapture={prosesVideoBaru} disabled={memprosesVideo || !siapUntukVideo} />
-            <VideoUpload onUpload={prosesVideoBaru} disabled={memprosesVideo || !siapUntukVideo} />
+            <VideoCapture onCapture={prosesVideoBaru} disabled={memprosesVideo || !wajibLengkap} />
+            <VideoUpload onUpload={prosesVideoBaru} disabled={memprosesVideo || !wajibLengkap} />
           </div>
           {memprosesVideo && (
             <p className="pesan-proses"><IconLoader size={16} /> Memeriksa video…</p>
           )}
-          {!siapUntukVideo && (
+          {!wajibLengkap && (
             <p className="pesan-proses">
               <IconAlert size={16} /> Lengkapi lokasi, nama, No HP/WA, dan minimal satu foto dahulu sebelum menambahkan video.
             </p>
@@ -282,10 +283,16 @@ export default function HalamanLaporan() {
           type="button"
           className="tombol-kirim"
           onClick={kirimLaporan}
-          disabled={mengirim || memproses || memprosesVideo}
+          disabled={mengirim || memproses || memprosesVideo || !wajibLengkap}
         >
           {mengirim ? (<><IconLoader size={18} /> Mengirim…</>) : 'Kirim Laporan'}
         </button>
+
+        {!wajibLengkap && !mengirim && (
+          <p className="pesan-proses">
+            <IconAlert size={16} /> Lengkapi lokasi, nama, No HP/WA, dan minimal satu foto sebelum mengirim laporan. Video bersifat opsional.
+          </p>
+        )}
 
         {status.pesan && (
           <p className={`pesan-status pesan-status-${status.jenis}`}>

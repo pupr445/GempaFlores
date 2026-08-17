@@ -2,11 +2,30 @@
 
 import Seismogram from './Seismogram';
 import NavTabs from './NavTabs';
+import { asetPublik } from '../lib/basePath';
 
 export default function AppHeader({ subtitle }) {
   return (
     <header className="app-header">
       <div className="app-header-inner">
+        <div className="instansi-row">
+          <img
+            src={asetPublik('/logo-ntt.png')}
+            alt="Lambang Provinsi Nusa Tenggara Timur"
+            className="instansi-logo"
+          />
+          <div className="instansi-text">
+            <p>Pemerintah Provinsi Nusa Tenggara Timur</p>
+            <p>Dinas Pekerjaan Umum dan Perumahan Rakyat</p>
+            <p>Bidang Bina Marga</p>
+          </div>
+          <img
+            src={asetPublik('/logo-pupr.jpg')}
+            alt="Logo PUPR"
+            className="instansi-logo"
+          />
+        </div>
+
         <p className="app-eyebrow">GempaFlores</p>
         <h1 className="app-title">Lapor Dampak Gempa</h1>
         <p className="app-subtitle">

@@ -7,6 +7,7 @@ const nextConfig = {
   images: { unoptimized: true },
   // Ganti '/laporan-app' sesuai nama repo GitHub kamu.
   basePath: process.env.NODE_ENV === 'production' ? '/GempaFlores' : '',
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/GempaFlores/' : '',
 };
 
 module.exports = nextConfig;

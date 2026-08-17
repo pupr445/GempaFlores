@@ -1,17 +1,37 @@
 /**
- * Menempelkan watermark koordinat + alamat + waktu di pojok bawah foto.
+ * Menempelkan watermark koordinat + alamat + waktu di pojok bawah foto,
+ * SEKALIGUS mengompres foto (batasi dimensi terpanjang + turunkan kualitas
+ * JPEG) supaya hemat kuota Supabase Storage tanpa mengorbankan kejelasan
+ * foto untuk keperluan pelaporan lapangan.
+ *
  * Menerima Blob/File foto asli, mengembalikan Blob foto baru (JPEG).
  */
+
+// Sisi terpanjang foto dibatasi maksimal segini (px). 1600px sudah lebih
+// dari cukup untuk dilihat di layar HP/laptop maupun dicetak A4 kecil,
+// tapi ukuran filenya jauh lebih kecil dibanding foto asli kamera HP
+// (yang biasanya 3000-4000px).
+const MAKS_SISI_TERPANJANG = 1600;
+const KUALITAS_JPEG = 0.75;
+
 export async function tambahWatermark(fotoBlob, lokasi) {
   const { lat, lng, kabupatenKota, kecamatan, desaKelurahan } = lokasi;
 
   const imgBitmap = await createImageBitmap(fotoBlob);
 
+  // Hitung dimensi hasil kompresi, jaga rasio aspek foto asli.
+  const skala = Math.min(
+    1,
+    MAKS_SISI_TERPANJANG / Math.max(imgBitmap.width, imgBitmap.height)
+  );
+  const lebar = Math.round(imgBitmap.width * skala);
+  const tinggi = Math.round(imgBitmap.height * skala);
+
   const canvas = document.createElement('canvas');
-  canvas.width = imgBitmap.width;
-  canvas.height = imgBitmap.height;
+  canvas.width = lebar;
+  canvas.height = tinggi;
   const ctx = canvas.getContext('2d');
-  ctx.drawImage(imgBitmap, 0, 0);
+  ctx.drawImage(imgBitmap, 0, 0, lebar, tinggi);
 
   const waktu = new Date().toLocaleString('id-ID', {
     dateStyle: 'medium',
@@ -25,7 +45,7 @@ export async function tambahWatermark(fotoBlob, lokasi) {
   ];
 
   // Ukuran font menyesuaikan lebar foto agar tetap terbaca di HP.
-  const fontSize = Math.max(18, Math.round(canvas.width / 32));
+  const fontSize = Math.max(16, Math.round(canvas.width / 32));
   const lineHeight = fontSize * 1.4;
   const padding = fontSize * 0.6;
   const tinggiOverlay = baris.length * lineHeight + padding * 2;
@@ -51,6 +71,6 @@ export async function tambahWatermark(fotoBlob, lokasi) {
   });
 
   return new Promise((resolve) => {
-    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.9);
+    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', KUALITAS_JPEG);
   });
 }

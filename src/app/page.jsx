@@ -33,6 +33,8 @@ export default function HalamanLaporan() {
     setLokasi(data);
   }, []);
 
+  const siapUntukVideo = Boolean(lokasi) && namaPelapor.trim() !== '' && noHp.trim() !== '' && photos.length > 0;
+
   const prosesFotoBaru = async (file) => {
     if (!lokasi) {
       setStatus({ jenis: 'error', pesan: 'Tunggu lokasi selesai diambil sebelum menambahkan foto.' });
@@ -259,11 +261,16 @@ export default function HalamanLaporan() {
         <section>
           <p className="section-eyebrow">05 &middot; Video (opsional)</p>
           <div className="tombol-foto">
-            <VideoCapture onCapture={prosesVideoBaru} disabled={memprosesVideo} />
-            <VideoUpload onUpload={prosesVideoBaru} disabled={memprosesVideo} />
+            <VideoCapture onCapture={prosesVideoBaru} disabled={memprosesVideo || !siapUntukVideo} />
+            <VideoUpload onUpload={prosesVideoBaru} disabled={memprosesVideo || !siapUntukVideo} />
           </div>
           {memprosesVideo && (
             <p className="pesan-proses"><IconLoader size={16} /> Memeriksa video…</p>
+          )}
+          {!siapUntukVideo && (
+            <p className="pesan-proses">
+              <IconAlert size={16} /> Lengkapi lokasi, nama, No HP/WA, dan minimal satu foto dahulu sebelum menambahkan video.
+            </p>
           )}
           <VideoPreview videos={videos} onRemove={hapusVideo} />
           <p className="field-hint">

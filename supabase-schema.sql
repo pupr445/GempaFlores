@@ -1,8 +1,15 @@
 -- Jalankan script ini di Supabase SQL Editor
 
+-- Jika tabel "laporan" sudah pernah dibuat sebelumnya (belum ada kolom
+-- nama_pelapor & no_hp), jalankan baris berikut agar tidak perlu drop tabel:
+-- alter table laporan add column if not exists nama_pelapor text;
+-- alter table laporan add column if not exists no_hp text;
+
 create table if not exists laporan (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz default now(),
+  nama_pelapor text,
+  no_hp text,
   deskripsi text,
   kabupaten_kota text,
   kecamatan text,

@@ -15,6 +15,8 @@ const buatId = () => `foto-${Date.now()}-${idCounter++}`;
 
 export default function HalamanLaporan() {
   const [lokasi, setLokasi] = useState(null);
+  const [namaPelapor, setNamaPelapor] = useState('');
+  const [noHp, setNoHp] = useState('');
   const [deskripsi, setDeskripsi] = useState('');
   const [photos, setPhotos] = useState([]); // { id, blob, previewUrl }
   const [memproses, setMemproses] = useState(false);
@@ -56,6 +58,10 @@ export default function HalamanLaporan() {
 
   const kirimLaporan = async (e) => {
     e.preventDefault();
+    if (!namaPelapor.trim() || !noHp.trim()) {
+      setStatus({ jenis: 'error', pesan: 'Lengkapi nama dan nomor HP/WA sebelum mengirim.' });
+      return;
+    }
     if (!lokasi) {
       setStatus({ jenis: 'error', pesan: 'Lengkapi kabupaten/kota dan kecamatan sebelum mengirim.' });
       return;
@@ -72,6 +78,8 @@ export default function HalamanLaporan() {
       const { data: laporan, error: errLaporan } = await supabase
         .from('laporan')
         .insert({
+          nama_pelapor: namaPelapor.trim(),
+          no_hp: noHp.trim(),
           deskripsi,
           kabupaten_kota: lokasi.kabupatenKota,
           kecamatan: lokasi.kecamatan,
@@ -107,6 +115,8 @@ export default function HalamanLaporan() {
       }
 
       setStatus({ jenis: 'sukses', pesan: 'Laporan terkirim. Terima kasih atas laporannya.' });
+      setNamaPelapor('');
+      setNoHp('');
       setDeskripsi('');
       photos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
       setPhotos([]);
@@ -139,7 +149,37 @@ export default function HalamanLaporan() {
         </section>
 
         <section>
-          <p className="section-eyebrow">03 &middot; Foto</p>
+          <p className="section-eyebrow">03 &middot; Kontak Pelapor</p>
+          <div className="field-grid">
+            <label className="field">
+              <span className="field-label">Nama Pelapor <span className="field-wajib">*</span></span>
+              <input
+                type="text"
+                placeholder="Nama lengkap"
+                value={namaPelapor}
+                onChange={(e) => setNamaPelapor(e.target.value)}
+                required
+              />
+            </label>
+
+            <label className="field">
+              <span className="field-label">No HP/WA <span className="field-wajib">*</span></span>
+              <input
+                type="tel"
+                placeholder="08xxxxxxxxxx"
+                value={noHp}
+                onChange={(e) => setNoHp(e.target.value)}
+                required
+              />
+            </label>
+          </div>
+          <p className="field-hint">
+            Nama dan No HP/WA wajib diisi untuk memudahkan komunikasi dan koordinasi.
+          </p>
+        </section>
+
+        <section>
+          <p className="section-eyebrow">04 &middot; Foto</p>
           <div className="tombol-foto">
             <CameraCapture onCapture={prosesFotoBaru} disabled={memproses || !lokasi} />
             <FileUpload onUpload={prosesFotoBaru} disabled={memproses || !lokasi} />

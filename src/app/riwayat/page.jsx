@@ -77,6 +77,18 @@ export default function HalamanRiwayat() {
                 </p>
               </div>
 
+              {(laporan.nama_pelapor || laporan.no_hp) && (
+                <p className="kartu-laporan-kontak">
+                  {laporan.nama_pelapor}
+                  {laporan.nama_pelapor && laporan.no_hp && ' · '}
+                  {laporan.no_hp && (
+                    <a href={`https://wa.me/${laporan.no_hp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
+                      {laporan.no_hp}
+                    </a>
+                  )}
+                </p>
+              )}
+
               {laporan.deskripsi && (
                 <p className="kartu-laporan-deskripsi">{laporan.deskripsi}</p>
               )}

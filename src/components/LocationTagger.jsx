@@ -1,23 +1,34 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { DAFTAR_KABUPATEN, kecamatanUntuk } from '../lib/wilayahFlores';
 import { IconMapPin, IconRefresh, IconLoader, IconCheck, IconAlert } from './icons';
+
+// Dimuat hanya di browser (ssr: false) — Leaflet mengakses `window`, yang
+// tidak tersedia saat proses build statis (next build / output: export).
+const PetaPemilihLokasi = dynamic(() => import('./PetaPemilihLokasi'), {
+  ssr: false,
+  loading: () => <p className="peta-loading">Memuat peta…</p>,
+});
 
 const OPSI_LAINNYA = 'Lainnya (ketik manual)';
 
 /**
- * Koordinat murni dari GPS perangkat — TIDAK memanggil layanan
- * reverse-geocoding apa pun (semua API geocoding berbayar setelah
- * kuota gratis habis). Kab/kota, kecamatan, dan desa/kelurahan
- * semuanya dipilih/diketik manual oleh pelapor. Link "Lihat di Google
- * Maps" hanya URL biasa (maps.google.com/?q=lat,lng) — tidak memanggil
- * API apa pun, jadi tidak ada biaya.
+ * Koordinat dari GPS perangkat ATAU dipilih/digeser manual di peta —
+ * TIDAK memanggil layanan reverse-geocoding apa pun (semua API geocoding
+ * berbayar setelah kuota gratis habis). Kab/kota, kecamatan, dan
+ * desa/kelurahan semuanya dipilih/diketik manual oleh pelapor. Peta
+ * pakai ubin OpenStreetMap gratis (Leaflet), link "Lihat di Google Maps"
+ * hanya URL biasa (maps.google.com/?q=lat,lng) — tidak memanggil API
+ * apa pun, jadi tidak ada biaya.
  */
 export default function LocationTagger({ onLocationReady }) {
   const [gpsStatus, setGpsStatus] = useState('idle'); // idle | loading | ready | error
   const [pesanError, setPesanError] = useState('');
   const [koordinat, setKoordinat] = useState(null); // { lat, lng }
+  const [sumberKoordinat, setSumberKoordinat] = useState('gps'); // 'gps' | 'manual'
+  const [tampilPeta, setTampilPeta] = useState(false);
 
   const [kabupatenKota, setKabupatenKota] = useState('');
   const [kabupatenManual, setKabupatenManual] = useState('');
@@ -46,6 +57,7 @@ export default function LocationTagger({ onLocationReady }) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setKoordinat({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setSumberKoordinat('gps');
         setGpsStatus('ready');
       },
       (err) => {
@@ -58,6 +70,13 @@ export default function LocationTagger({ onLocationReady }) {
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
+  }, []);
+
+  const pilihTitikManual = useCallback(({ lat, lng }) => {
+    setKoordinat({ lat, lng });
+    setSumberKoordinat('manual');
+    setGpsStatus('ready');
+    setPesanError('');
   }, []);
 
   useEffect(() => {
@@ -91,6 +110,9 @@ export default function LocationTagger({ onLocationReady }) {
               <span className="koordinat-mono">
                 {koordinat.lat.toFixed(6)}, {koordinat.lng.toFixed(6)}
               </span>
+              {sumberKoordinat === 'manual' && (
+                <span className="koordinat-sumber">(dipilih manual di peta)</span>
+              )}
             </>
           )}
           {gpsStatus === 'error' && (
@@ -100,11 +122,30 @@ export default function LocationTagger({ onLocationReady }) {
           )}
           {gpsStatus === 'idle' && <span>Menyiapkan GPS…</span>}
         </div>
-        <button type="button" className="btn-ghost-icon" onClick={ambilLokasiGPS}>
-          <IconRefresh size={16} />
-          Perbarui GPS
-        </button>
+        <div className="gps-tombol-grup">
+          <button type="button" className="btn-ghost-icon" onClick={ambilLokasiGPS}>
+            <IconRefresh size={16} />
+            Perbarui GPS
+          </button>
+          <button
+            type="button"
+            className="btn-ghost-icon"
+            onClick={() => setTampilPeta((v) => !v)}
+          >
+            <IconMapPin size={16} />
+            {tampilPeta ? 'Tutup Peta' : 'Pilih di Peta'}
+          </button>
+        </div>
       </div>
+
+      {tampilPeta && (
+        <div className="peta-pemilih-blok">
+          <p className="field-hint">
+            <IconMapPin size={14} /> Ketuk atau geser pin di peta untuk menentukan titik lokasi sendiri.
+          </p>
+          <PetaPemilihLokasi koordinat={koordinat} onPilihTitik={pilihTitikManual} />
+        </div>
+      )}
 
       {gpsStatus === 'ready' && koordinat && (
         <a
@@ -182,8 +223,8 @@ export default function LocationTagger({ onLocationReady }) {
       </div>
 
       <p className="field-hint">
-        <IconMapPin size={14} /> Koordinat murni dari GPS perangkat — kab/kota,
-        kecamatan, dan desa dipilih/diketik sendiri di atas.
+        <IconMapPin size={14} /> Koordinat dari GPS perangkat atau dipilih manual di peta —
+        kab/kota, kecamatan, dan desa dipilih/diketik sendiri di atas.
       </p>
     </div>
   );

@@ -297,6 +297,53 @@ textarea {
   font-size: 0.82rem;
 }
 
+.koordinat-sumber {
+  font-size: 0.76rem;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.gps-tombol-grup {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.peta-pemilih-blok {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.peta-pemilih-wrapper {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.peta-pemilih-map {
+  width: 100%;
+  height: 280px;
+}
+
+.peta-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 280px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--laut-tint);
+  color: var(--laut-deep);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.peta-pin-marker {
+  background: transparent;
+  border: none;
+}
+
 .icon-spin {
   animation: putar 0.9s linear infinite;
 }

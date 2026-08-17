@@ -52,6 +52,24 @@ export function IconRefresh(props) {
   );
 }
 
+export function IconSearch(props) {
+  return (
+    <svg {...base} width={props.size || 20} height={props.size || 20} className={props.className}>
+      <circle cx="10.8" cy="10.8" r="6.3" />
+      <path d="M20 20l-4.35-4.35" />
+    </svg>
+  );
+}
+
+export function IconX(props) {
+  return (
+    <svg {...base} width={props.size || 20} height={props.size || 20} className={props.className}>
+      <path d="M6 6l12 12" />
+      <path d="M18 6L6 18" />
+    </svg>
+  );
+}
+
 export function IconTrash(props) {
   return (
     <svg {...base} width={props.size || 16} height={props.size || 16} className={props.className}>

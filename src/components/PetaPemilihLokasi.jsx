@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { IconSearch, IconX, IconMapPin, IconLoader } from './icons';
 
 // Ikon default Leaflet mengandalkan path gambar relatif yang tidak cocok
 // dengan bundler Next.js — pakai ikon SVG inline sederhana sebagai gantinya
@@ -22,6 +23,11 @@ const ikonPin = new L.DivIcon({
 // ada koordinat GPS/manual sama sekali.
 const PUSAT_DEFAULT = [-8.65, 121.3];
 
+// Kotak batas pencarian (barat, selatan, timur, utara) — kira-kira
+// mencakup seluruh Pulau Flores + perairan sekitarnya, supaya hasil
+// pencarian tidak melebar ke luar NTT.
+const BATAS_PENCARIAN = '119.4,-9.3,123.9,-7.6';
+
 function PenangkapKlik({ onPilihTitik }) {
   useMapEvents({
     click(e) {
@@ -29,6 +35,124 @@ function PenangkapKlik({ onPilihTitik }) {
     },
   });
   return null;
+}
+
+/**
+ * Kotak pencarian nama tempat di atas peta — pakai Nominatim (OpenStreetMap),
+ * layanan geocoding gratis tanpa API key, sejalan dengan ubin peta yang
+ * sudah dipakai. Pencarian di-debounce ~600ms dan dibatasi ke area Flores
+ * supaya tetap ringan dan sopan terhadap kuota layanan gratis tsb.
+ */
+function PencarianLokasi({ onPilihTitik }) {
+  const map = useMap();
+  const [kueri, setKueri] = useState('');
+  const [hasil, setHasil] = useState([]);
+  const [mencari, setMencari] = useState(false);
+  const [tampilHasil, setTampilHasil] = useState(false);
+  const timerRef = useRef(null);
+  const abortRef = useRef(null);
+
+  useEffect(() => {
+    clearTimeout(timerRef.current);
+
+    if (kueri.trim().length < 3) {
+      setHasil([]);
+      setMencari(false);
+      return;
+    }
+
+    setMencari(true);
+    timerRef.current = setTimeout(async () => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      try {
+        const params = new URLSearchParams({
+          format: 'json',
+          q: kueri.trim(),
+          countrycodes: 'id',
+          viewbox: BATAS_PENCARIAN,
+          bounded: '1',
+          limit: '6',
+          'accept-language': 'id',
+        });
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?${params.toString()}`,
+          { signal: controller.signal }
+        );
+        const data = await res.json();
+        setHasil(Array.isArray(data) ? data : []);
+      } catch (err) {
+        if (err.name !== 'AbortError') setHasil([]);
+      } finally {
+        setMencari(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(timerRef.current);
+  }, [kueri]);
+
+  const pilihHasil = (item) => {
+    const lat = parseFloat(item.lat);
+    const lng = parseFloat(item.lon);
+    map.flyTo([lat, lng], 16, { duration: 1 });
+    onPilihTitik({ lat, lng });
+    setKueri(item.display_name);
+    setTampilHasil(false);
+    setHasil([]);
+  };
+
+  return (
+    <div className="peta-pencarian" onClick={(e) => e.stopPropagation()}>
+      <div className="peta-pencarian-box">
+        <IconSearch size={16} className="peta-pencarian-ikon" />
+        <input
+          type="text"
+          value={kueri}
+          placeholder="Cari nama tempat, jalan, desa…"
+          onChange={(e) => {
+            setKueri(e.target.value);
+            setTampilHasil(true);
+          }}
+          onFocus={() => setTampilHasil(true)}
+          onBlur={() => setTimeout(() => setTampilHasil(false), 150)}
+        />
+        {mencari && <IconLoader size={15} className="peta-pencarian-loader" />}
+        {!mencari && kueri && (
+          <button
+            type="button"
+            className="peta-pencarian-clear"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              setKueri('');
+              setHasil([]);
+            }}
+            aria-label="Hapus pencarian"
+          >
+            <IconX size={14} />
+          </button>
+        )}
+      </div>
+
+      {tampilHasil && hasil.length > 0 && (
+        <ul className="peta-pencarian-hasil">
+          {hasil.map((item) => (
+            <li key={item.place_id}>
+              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pilihHasil(item)}>
+                <IconMapPin size={14} />
+                <span>{item.display_name}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {tampilHasil && !mencari && kueri.trim().length >= 3 && hasil.length === 0 && (
+        <div className="peta-pencarian-kosong">Tidak ditemukan. Coba kata kunci lain.</div>
+      )}
+    </div>
+  );
 }
 
 export default function PetaPemilihLokasi({ koordinat, onPilihTitik }) {
@@ -51,6 +175,7 @@ export default function PetaPemilihLokasi({ koordinat, onPilihTitik }) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <PenangkapKlik onPilihTitik={onPilihTitik} />
+        <PencarianLokasi onPilihTitik={onPilihTitik} />
         {koordinat && (
           <Marker
             position={[koordinat.lat, koordinat.lng]}

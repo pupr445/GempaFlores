@@ -316,14 +316,128 @@ textarea {
 }
 
 .peta-pemilih-wrapper {
+  position: relative;
   border-radius: var(--radius-md);
-  overflow: hidden;
   border: 1px solid var(--line);
 }
 
 .peta-pemilih-map {
   width: 100%;
   height: 280px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* ---------- Pencarian lokasi di atas peta ---------- */
+
+.peta-pencarian {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 1000;
+}
+
+.peta-pencarian-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.peta-pencarian-ikon {
+  color: var(--ink-soft);
+  flex-shrink: 0;
+}
+
+.peta-pencarian-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.88rem;
+  background: transparent;
+  color: var(--ink);
+  min-width: 0;
+}
+
+.peta-pencarian-loader {
+  color: var(--laut-deep);
+  animation: girar 0.9s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.peta-pencarian-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--laut-tint);
+  color: var(--ink-soft);
+  border-radius: 999px;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.peta-pencarian-hasil {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 4px;
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.peta-pencarian-hasil li + li {
+  border-top: 1px solid var(--line);
+}
+
+.peta-pencarian-hasil button {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 6px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 0.82rem;
+  color: var(--ink);
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.peta-pencarian-hasil button:hover,
+.peta-pencarian-hasil button:active {
+  background: var(--laut-tint);
+}
+
+.peta-pencarian-hasil button svg {
+  margin-top: 2px;
+  color: var(--laut-deep);
+  flex-shrink: 0;
+}
+
+.peta-pencarian-kosong {
+  margin-top: 6px;
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
 }
 
 .peta-loading {

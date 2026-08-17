@@ -1,6 +1,7 @@
-// Batas video agar tetap wajar diunggah dari lapangan dengan koneksi seadanya.
-export const MAKS_UKURAN_VIDEO_MB = 50;
-export const MAKS_DURASI_VIDEO_DETIK = 60;
+// Batas video agar tetap wajar diunggah dari lapangan dengan koneksi seadanya,
+// sekaligus menjaga kuota Storage free tier Supabase (1GB) tidak cepat penuh.
+export const MAKS_UKURAN_VIDEO_MB = 20;
+export const MAKS_DURASI_VIDEO_DETIK = 30;
 
 /**
  * Memvalidasi ukuran & durasi video sebelum ditambahkan ke daftar upload.

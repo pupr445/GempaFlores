@@ -17,7 +17,6 @@ export default function AppHeader({ subtitle }) {
           <div className="instansi-text">
             <p>Pemerintah Provinsi Nusa Tenggara Timur</p>
             <p>Dinas Pekerjaan Umum dan Perumahan Rakyat</p>
-            <p>Bidang Bina Marga</p>
           </div>
           <img
             src={asetPublik('/logo-pupr.jpg')}

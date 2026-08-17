@@ -20,7 +20,7 @@ export default function HalamanRiwayat() {
       setStatus('loading');
       const { data, error } = await supabase
         .from('laporan')
-        .select('*, foto_laporan(id, url)')
+        .select('*, foto_laporan(id, url), video_laporan(id, url)')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -104,6 +104,14 @@ export default function HalamanRiwayat() {
                     >
                       <img src={foto.url} alt="Foto laporan" loading="lazy" />
                     </a>
+                  ))}
+                </div>
+              )}
+
+              {laporan.video_laporan?.length > 0 && (
+                <div className="kartu-laporan-video-grid">
+                  {laporan.video_laporan.map((video) => (
+                    <video key={video.id} src={video.url} controls playsInline />
                   ))}
                 </div>
               )}

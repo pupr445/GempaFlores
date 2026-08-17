@@ -110,6 +110,15 @@ export function IconClipboard(props) {
   );
 }
 
+export function IconVideo(props) {
+  return (
+    <svg {...base} width={props.size || 20} height={props.size || 20} className={props.className}>
+      <path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h8A1.5 1.5 0 0 1 15 7.5v9A1.5 1.5 0 0 1 13.5 18h-8A1.5 1.5 0 0 1 4 16.5v-9Z" />
+      <path d="M15 10.2 19.4 7a.6.6 0 0 1 .96.48v9.04a.6.6 0 0 1-.96.48L15 13.8" />
+    </svg>
+  );
+}
+
 export function IconHistory(props) {
   return (
     <svg {...base} width={props.size || 18} height={props.size || 18} className={props.className}>

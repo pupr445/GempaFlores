@@ -5,13 +5,17 @@ import AppHeader from '../components/AppHeader';
 import CameraCapture from '../components/CameraCapture';
 import FileUpload from '../components/FileUpload';
 import PhotoPreview from '../components/PhotoPreview';
+import VideoCapture from '../components/VideoCapture';
+import VideoUpload from '../components/VideoUpload';
+import VideoPreview from '../components/VideoPreview';
 import LocationTagger from '../components/LocationTagger';
 import { IconLoader, IconAlert, IconCheck } from '../components/icons';
 import { tambahWatermark } from '../lib/watermark';
+import { validasiUkuranVideo, validasiDurasiVideo, MAKS_UKURAN_VIDEO_MB, MAKS_DURASI_VIDEO_DETIK } from '../lib/video';
 import { supabase } from '../lib/supabaseClient';
 
 let idCounter = 0;
-const buatId = () => `foto-${Date.now()}-${idCounter++}`;
+const buatId = (prefix = 'foto') => `${prefix}-${Date.now()}-${idCounter++}`;
 
 export default function HalamanLaporan() {
   const [lokasi, setLokasi] = useState(null);
@@ -19,7 +23,9 @@ export default function HalamanLaporan() {
   const [noHp, setNoHp] = useState('');
   const [deskripsi, setDeskripsi] = useState('');
   const [photos, setPhotos] = useState([]); // { id, blob, previewUrl }
+  const [videos, setVideos] = useState([]); // { id, blob, previewUrl }
   const [memproses, setMemproses] = useState(false);
+  const [memprosesVideo, setMemprosesVideo] = useState(false);
   const [mengirim, setMengirim] = useState(false);
   const [status, setStatus] = useState({ jenis: '', pesan: '' }); // jenis: '' | 'info' | 'error' | 'sukses'
 
@@ -53,6 +59,41 @@ export default function HalamanLaporan() {
       const target = prev.find((p) => p.id === id);
       if (target) URL.revokeObjectURL(target.previewUrl);
       return prev.filter((p) => p.id !== id);
+    });
+  };
+
+  const prosesVideoBaru = async (file) => {
+    const cekUkuran = validasiUkuranVideo(file);
+    if (!cekUkuran.ok) {
+      setStatus({ jenis: 'error', pesan: cekUkuran.pesan });
+      return;
+    }
+
+    setMemprosesVideo(true);
+    try {
+      const cekDurasi = await validasiDurasiVideo(file);
+      if (!cekDurasi.ok) {
+        setStatus({ jenis: 'error', pesan: cekDurasi.pesan });
+        return;
+      }
+      const previewUrl = URL.createObjectURL(file);
+      setVideos((prev) => [
+        ...prev,
+        { id: buatId('video'), blob: file, previewUrl },
+      ]);
+    } catch (err) {
+      console.error(err);
+      setStatus({ jenis: 'error', pesan: 'Video gagal diproses. Coba ambil/unggah ulang.' });
+    } finally {
+      setMemprosesVideo(false);
+    }
+  };
+
+  const hapusVideo = (id) => {
+    setVideos((prev) => {
+      const target = prev.find((v) => v.id === id);
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((v) => v.id !== id);
     });
   };
 
@@ -114,12 +155,37 @@ export default function HalamanLaporan() {
         if (errInsertFoto) throw errInsertFoto;
       }
 
+      for (const video of videos) {
+        const ekstensi = (video.blob.name?.split('.').pop() || 'mp4').toLowerCase();
+        const namaFile = `${laporan.id}/${buatId('video')}.${ekstensi}`;
+        const { error: errUpload } = await supabase.storage
+          .from('video-laporan')
+          .upload(namaFile, video.blob, { contentType: video.blob.type || 'video/mp4' });
+
+        if (errUpload) throw errUpload;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('video-laporan')
+          .getPublicUrl(namaFile);
+
+        const { error: errInsertVideo } = await supabase
+          .from('video_laporan')
+          .insert({
+            laporan_id: laporan.id,
+            url: publicUrlData.publicUrl,
+          });
+
+        if (errInsertVideo) throw errInsertVideo;
+      }
+
       setStatus({ jenis: 'sukses', pesan: 'Laporan terkirim. Terima kasih atas laporannya.' });
       setNamaPelapor('');
       setNoHp('');
       setDeskripsi('');
       photos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
       setPhotos([]);
+      videos.forEach((v) => URL.revokeObjectURL(v.previewUrl));
+      setVideos([]);
     } catch (err) {
       console.error(err);
       setStatus({ jenis: 'error', pesan: 'Laporan gagal terkirim. Periksa koneksi lalu coba lagi.' });
@@ -190,11 +256,26 @@ export default function HalamanLaporan() {
           <PhotoPreview photos={photos} onRemove={hapusFoto} />
         </section>
 
+        <section>
+          <p className="section-eyebrow">05 &middot; Video (opsional)</p>
+          <div className="tombol-foto">
+            <VideoCapture onCapture={prosesVideoBaru} disabled={memprosesVideo} />
+            <VideoUpload onUpload={prosesVideoBaru} disabled={memprosesVideo} />
+          </div>
+          {memprosesVideo && (
+            <p className="pesan-proses"><IconLoader size={16} /> Memeriksa video…</p>
+          )}
+          <VideoPreview videos={videos} onRemove={hapusVideo} />
+          <p className="field-hint">
+            Maks {MAKS_UKURAN_VIDEO_MB}MB dan {MAKS_DURASI_VIDEO_DETIK} detik per video.
+          </p>
+        </section>
+
         <button
           type="button"
           className="tombol-kirim"
           onClick={kirimLaporan}
-          disabled={mengirim || memproses}
+          disabled={mengirim || memproses || memprosesVideo}
         >
           {mengirim ? (<><IconLoader size={18} /> Mengirim…</>) : 'Kirim Laporan'}
         </button>

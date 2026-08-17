@@ -437,6 +437,25 @@ textarea {
   margin: 0;
 }
 
+.video-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.video-preview-item {
+  position: relative;
+}
+
+.video-preview-item video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: #000;
+}
+
 /* ---------- Kirim & status ---------- */
 
 .tombol-kirim {
@@ -592,6 +611,21 @@ textarea {
   object-fit: cover;
   border-radius: var(--radius-sm);
   border: 1px solid var(--line);
+}
+
+.kartu-laporan-video-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.kartu-laporan-video-grid video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: #000;
 }
 
 @media (max-width: 380px) {

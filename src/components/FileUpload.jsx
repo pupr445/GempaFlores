@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import { IconUpload } from './icons';
 
 /**
  * Tombol untuk mengunggah satu atau beberapa foto dari galeri/penyimpanan.
@@ -27,10 +28,12 @@ export default function FileUpload({ onUpload, disabled }) {
       />
       <button
         type="button"
+        className="btn-foto btn-foto-secondary"
         onClick={() => inputRef.current?.click()}
         disabled={disabled}
       >
-        🖼️ Unggah Foto
+        <IconUpload />
+        Unggah Foto
       </button>
     </div>
   );

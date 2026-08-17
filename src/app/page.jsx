@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import AppHeader from '../components/AppHeader';
 import CameraCapture from '../components/CameraCapture';
 import FileUpload from '../components/FileUpload';
 import PhotoPreview from '../components/PhotoPreview';
 import LocationTagger from '../components/LocationTagger';
+import { IconLoader, IconAlert, IconCheck } from '../components/icons';
 import { tambahWatermark } from '../lib/watermark';
 import { supabase } from '../lib/supabaseClient';
 
@@ -17,7 +19,7 @@ export default function HalamanLaporan() {
   const [photos, setPhotos] = useState([]); // { id, blob, previewUrl }
   const [memproses, setMemproses] = useState(false);
   const [mengirim, setMengirim] = useState(false);
-  const [pesanStatus, setPesanStatus] = useState('');
+  const [status, setStatus] = useState({ jenis: '', pesan: '' }); // jenis: '' | 'info' | 'error' | 'sukses'
 
   const handleLocationReady = useCallback((data) => {
     setLokasi(data);
@@ -25,9 +27,7 @@ export default function HalamanLaporan() {
 
   const prosesFotoBaru = async (file) => {
     if (!lokasi) {
-      setPesanStatus(
-        'Tunggu lokasi selesai diambil sebelum menambahkan foto.'
-      );
+      setStatus({ jenis: 'error', pesan: 'Tunggu lokasi selesai diambil sebelum menambahkan foto.' });
       return;
     }
     setMemproses(true);
@@ -40,7 +40,7 @@ export default function HalamanLaporan() {
       ]);
     } catch (err) {
       console.error(err);
-      setPesanStatus('Gagal memproses foto. Coba lagi.');
+      setStatus({ jenis: 'error', pesan: 'Foto gagal diproses. Coba ambil/unggah ulang.' });
     } finally {
       setMemproses(false);
     }
@@ -57,19 +57,18 @@ export default function HalamanLaporan() {
   const kirimLaporan = async (e) => {
     e.preventDefault();
     if (!lokasi) {
-      setPesanStatus('Lokasi belum tersedia.');
+      setStatus({ jenis: 'error', pesan: 'Lengkapi kabupaten/kota dan kecamatan sebelum mengirim.' });
       return;
     }
     if (photos.length === 0) {
-      setPesanStatus('Tambahkan minimal satu foto.');
+      setStatus({ jenis: 'error', pesan: 'Tambahkan minimal satu foto sebelum mengirim.' });
       return;
     }
 
     setMengirim(true);
-    setPesanStatus('Mengirim laporan…');
+    setStatus({ jenis: 'info', pesan: 'Mengirim laporan…' });
 
     try {
-      // 1. Simpan data laporan (tanpa data pelapor)
       const { data: laporan, error: errLaporan } = await supabase
         .from('laporan')
         .insert({
@@ -85,7 +84,6 @@ export default function HalamanLaporan() {
 
       if (errLaporan) throw errLaporan;
 
-      // 2. Upload tiap foto ke Supabase Storage, lalu simpan URL-nya
       for (const foto of photos) {
         const namaFile = `${laporan.id}/${buatId()}.jpg`;
         const { error: errUpload } = await supabase.storage
@@ -108,57 +106,68 @@ export default function HalamanLaporan() {
         if (errInsertFoto) throw errInsertFoto;
       }
 
-      setPesanStatus('Laporan berhasil dikirim. Terima kasih.');
+      setStatus({ jenis: 'sukses', pesan: 'Laporan terkirim. Terima kasih atas laporannya.' });
       setDeskripsi('');
       photos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
       setPhotos([]);
     } catch (err) {
       console.error(err);
-      setPesanStatus('Terjadi kesalahan saat mengirim laporan. Coba lagi.');
+      setStatus({ jenis: 'error', pesan: 'Laporan gagal terkirim. Periksa koneksi lalu coba lagi.' });
     } finally {
       setMengirim(false);
     }
   };
 
   return (
-    <main className="halaman-laporan">
-      <h1>Form Laporan</h1>
+    <>
+      <AppHeader />
 
-      <section>
-        <h2>Lokasi</h2>
-        <LocationTagger onLocationReady={handleLocationReady} />
-      </section>
+      <main className="halaman-laporan">
+        <section>
+          <p className="section-eyebrow">01 &middot; Lokasi</p>
+          <LocationTagger onLocationReady={handleLocationReady} />
+        </section>
 
-      <section>
-        <h2>Deskripsi</h2>
-        <textarea
-          value={deskripsi}
-          onChange={(e) => setDeskripsi(e.target.value)}
-          placeholder="Tuliskan keterangan laporan…"
-          rows={4}
-        />
-      </section>
+        <section>
+          <p className="section-eyebrow">02 &middot; Deskripsi</p>
+          <textarea
+            value={deskripsi}
+            onChange={(e) => setDeskripsi(e.target.value)}
+            placeholder="Ceritakan kondisi di lapangan: kerusakan, korban, kebutuhan mendesak…"
+            rows={4}
+          />
+        </section>
 
-      <section>
-        <h2>Foto</h2>
-        <div className="tombol-foto">
-          <CameraCapture onCapture={prosesFotoBaru} disabled={memproses || !lokasi} />
-          <FileUpload onUpload={prosesFotoBaru} disabled={memproses || !lokasi} />
-        </div>
-        {memproses && <p>Memproses watermark foto…</p>}
-        <PhotoPreview photos={photos} onRemove={hapusFoto} />
-      </section>
+        <section>
+          <p className="section-eyebrow">03 &middot; Foto</p>
+          <div className="tombol-foto">
+            <CameraCapture onCapture={prosesFotoBaru} disabled={memproses || !lokasi} />
+            <FileUpload onUpload={prosesFotoBaru} disabled={memproses || !lokasi} />
+          </div>
+          {memproses && (
+            <p className="pesan-proses"><IconLoader size={16} /> Membubuhkan watermark lokasi ke foto…</p>
+          )}
+          <PhotoPreview photos={photos} onRemove={hapusFoto} />
+        </section>
 
-      <button
-        type="button"
-        className="tombol-kirim"
-        onClick={kirimLaporan}
-        disabled={mengirim || memproses}
-      >
-        {mengirim ? 'Mengirim…' : 'Kirim Laporan'}
-      </button>
+        <button
+          type="button"
+          className="tombol-kirim"
+          onClick={kirimLaporan}
+          disabled={mengirim || memproses}
+        >
+          {mengirim ? (<><IconLoader size={18} /> Mengirim…</>) : 'Kirim Laporan'}
+        </button>
 
-      {pesanStatus && <p className="pesan-status">{pesanStatus}</p>}
-    </main>
+        {status.pesan && (
+          <p className={`pesan-status pesan-status-${status.jenis}`}>
+            {status.jenis === 'error' && <IconAlert size={16} />}
+            {status.jenis === 'sukses' && <IconCheck size={16} />}
+            {status.jenis === 'info' && <IconLoader size={16} />}
+            {status.pesan}
+          </p>
+        )}
+      </main>
+    </>
   );
 }

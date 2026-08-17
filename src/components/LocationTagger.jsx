@@ -1,89 +1,190 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { reverseGeocode } from '../lib/geocode';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { DAFTAR_KABUPATEN, kecamatanUntuk } from '../lib/wilayahFlores';
+import { IconMapPin, IconRefresh, IconLoader, IconCheck, IconAlert } from './icons';
+
+const OPSI_LAINNYA = 'Lainnya (ketik manual)';
 
 /**
- * Mengambil koordinat presisi perangkat (GPS) lalu menerjemahkannya
- * menjadi kabupaten/kota, kecamatan, desa/kelurahan lewat Google Maps.
- * Memanggil onLocationReady setiap kali lokasi berhasil didapat.
+ * Koordinat murni dari GPS perangkat — TIDAK memanggil layanan
+ * reverse-geocoding apa pun (semua API geocoding berbayar setelah
+ * kuota gratis habis). Kab/kota, kecamatan, dan desa/kelurahan
+ * semuanya dipilih/diketik manual oleh pelapor. Link "Lihat di Google
+ * Maps" hanya URL biasa (maps.google.com/?q=lat,lng) — tidak memanggil
+ * API apa pun, jadi tidak ada biaya.
  */
 export default function LocationTagger({ onLocationReady }) {
-  const [status, setStatus] = useState('idle'); // idle | loading | ready | error
-  const [lokasi, setLokasi] = useState(null);
+  const [gpsStatus, setGpsStatus] = useState('idle'); // idle | loading | ready | error
   const [pesanError, setPesanError] = useState('');
+  const [koordinat, setKoordinat] = useState(null); // { lat, lng }
 
-  const ambilLokasi = useCallback(() => {
+  const [kabupatenKota, setKabupatenKota] = useState('');
+  const [kabupatenManual, setKabupatenManual] = useState('');
+  const [kecamatan, setKecamatan] = useState('');
+  const [kecamatanManual, setKecamatanManual] = useState('');
+  const [desaKelurahan, setDesaKelurahan] = useState('');
+
+  const kabupatenTerpilih =
+    kabupatenKota === OPSI_LAINNYA ? kabupatenManual.trim() : kabupatenKota;
+  const kecamatanTerpilih =
+    kecamatan === OPSI_LAINNYA ? kecamatanManual.trim() : kecamatan;
+
+  const daftarKecamatan = useMemo(
+    () => kecamatanUntuk(kabupatenKota),
+    [kabupatenKota]
+  );
+
+  const ambilLokasiGPS = useCallback(() => {
     if (!navigator.geolocation) {
-      setStatus('error');
-      setPesanError('Perangkat tidak mendukung GPS/geolocation.');
+      setGpsStatus('error');
+      setPesanError('Perangkat ini tidak mendukung GPS.');
       return;
     }
 
-    setStatus('loading');
+    setGpsStatus('loading');
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude, longitude } = pos.coords;
-        try {
-          const alamat = await reverseGeocode(latitude, longitude);
-          const dataLokasi = {
-            lat: latitude,
-            lng: longitude,
-            kabupatenKota: alamat.kabupatenKota,
-            kecamatan: alamat.kecamatan,
-            desaKelurahan: alamat.desaKelurahan,
-            alamatLengkap: alamat.alamatLengkap,
-          };
-          setLokasi(dataLokasi);
-          setStatus('ready');
-          onLocationReady?.(dataLokasi);
-        } catch (err) {
-          setStatus('error');
-          setPesanError('Gagal menerjemahkan koordinat ke alamat.');
-        }
+      (pos) => {
+        setKoordinat({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGpsStatus('ready');
       },
       (err) => {
-        setStatus('error');
+        setGpsStatus('error');
         setPesanError(
           err.code === 1
-            ? 'Izin lokasi ditolak. Aktifkan izin lokasi di browser.'
-            : 'Gagal mengambil lokasi. Pastikan GPS aktif.'
+            ? 'Izin lokasi ditolak. Aktifkan izin lokasi di pengaturan browser.'
+            : 'Gagal mengambil koordinat GPS. Pastikan GPS aktif lalu coba lagi.'
         );
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
-  }, [onLocationReady]);
+  }, []);
 
   useEffect(() => {
-    ambilLokasi();
-  }, [ambilLokasi]);
+    ambilLokasiGPS();
+  }, [ambilLokasiGPS]);
+
+  useEffect(() => {
+    if (koordinat && kabupatenTerpilih && kecamatanTerpilih) {
+      onLocationReady?.({
+        lat: koordinat.lat,
+        lng: koordinat.lng,
+        kabupatenKota: kabupatenTerpilih,
+        kecamatan: kecamatanTerpilih,
+        desaKelurahan: desaKelurahan.trim() || '-',
+      });
+    }
+  }, [koordinat, kabupatenTerpilih, kecamatanTerpilih, desaKelurahan, onLocationReady]);
 
   return (
     <div className="location-tagger">
-      {status === 'loading' && <p>Mengambil koordinat presisi…</p>}
-
-      {status === 'error' && (
-        <div className="location-error">
-          <p>{pesanError}</p>
-          <button type="button" onClick={ambilLokasi}>
-            Coba Ambil Lokasi Lagi
-          </button>
+      <div className="gps-row">
+        <div className={`gps-status gps-status-${gpsStatus}`}>
+          {gpsStatus === 'loading' && (
+            <>
+              <IconLoader /> <span>Mengambil koordinat GPS…</span>
+            </>
+          )}
+          {gpsStatus === 'ready' && koordinat && (
+            <>
+              <IconCheck />
+              <span className="koordinat-mono">
+                {koordinat.lat.toFixed(6)}, {koordinat.lng.toFixed(6)}
+              </span>
+            </>
+          )}
+          {gpsStatus === 'error' && (
+            <>
+              <IconAlert /> <span>{pesanError}</span>
+            </>
+          )}
+          {gpsStatus === 'idle' && <span>Menyiapkan GPS…</span>}
         </div>
+        <button type="button" className="btn-ghost-icon" onClick={ambilLokasiGPS}>
+          <IconRefresh size={16} />
+          Perbarui GPS
+        </button>
+      </div>
+
+      {gpsStatus === 'ready' && koordinat && (
+        <a
+          className="link-gmaps"
+          href={`https://www.google.com/maps?q=${koordinat.lat},${koordinat.lng}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <IconMapPin size={14} /> Lihat titik ini di Google Maps
+        </a>
       )}
 
-      {status === 'ready' && lokasi && (
-        <div className="location-info">
-          <p><strong>Kab/Kota:</strong> {lokasi.kabupatenKota}</p>
-          <p><strong>Kecamatan:</strong> {lokasi.kecamatan}</p>
-          <p><strong>Desa/Kelurahan:</strong> {lokasi.desaKelurahan}</p>
-          <p className="koordinat-kecil">
-            {lokasi.lat.toFixed(6)}, {lokasi.lng.toFixed(6)}
-          </p>
-          <button type="button" onClick={ambilLokasi}>
-            Perbarui Lokasi
-          </button>
-        </div>
-      )}
+      <div className="field-grid">
+        <label className="field">
+          <span className="field-label">Kabupaten/Kota</span>
+          <select
+            value={kabupatenKota}
+            onChange={(e) => {
+              setKabupatenKota(e.target.value);
+              setKecamatan('');
+            }}
+          >
+            <option value="">Pilih kabupaten/kota…</option>
+            {DAFTAR_KABUPATEN.map((k) => (
+              <option key={k} value={k}>{k}</option>
+            ))}
+            <option value={OPSI_LAINNYA}>{OPSI_LAINNYA}</option>
+          </select>
+          {kabupatenKota === OPSI_LAINNYA && (
+            <input
+              type="text"
+              className="field-manual"
+              placeholder="Ketik nama kabupaten/kota"
+              value={kabupatenManual}
+              onChange={(e) => setKabupatenManual(e.target.value)}
+            />
+          )}
+        </label>
+
+        <label className="field">
+          <span className="field-label">Kecamatan</span>
+          <select
+            value={kecamatan}
+            onChange={(e) => setKecamatan(e.target.value)}
+            disabled={!kabupatenKota}
+          >
+            <option value="">
+              {kabupatenKota ? 'Pilih kecamatan…' : 'Pilih kabupaten/kota dulu'}
+            </option>
+            {daftarKecamatan.map((k) => (
+              <option key={k} value={k}>{k}</option>
+            ))}
+            {kabupatenKota && <option value={OPSI_LAINNYA}>{OPSI_LAINNYA}</option>}
+          </select>
+          {kecamatan === OPSI_LAINNYA && (
+            <input
+              type="text"
+              className="field-manual"
+              placeholder="Ketik nama kecamatan"
+              value={kecamatanManual}
+              onChange={(e) => setKecamatanManual(e.target.value)}
+            />
+          )}
+        </label>
+
+        <label className="field field-full">
+          <span className="field-label">Desa/Kelurahan</span>
+          <input
+            type="text"
+            placeholder="Ketik nama desa/kelurahan"
+            value={desaKelurahan}
+            onChange={(e) => setDesaKelurahan(e.target.value)}
+          />
+        </label>
+      </div>
+
+      <p className="field-hint">
+        <IconMapPin size={14} /> Koordinat murni dari GPS perangkat — kab/kota,
+        kecamatan, dan desa dipilih/diketik sendiri di atas.
+      </p>
     </div>
   );
 }

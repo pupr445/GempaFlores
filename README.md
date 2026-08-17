@@ -1,10 +1,10 @@
-# Laporan App
+# GempaFlores
 
-Aplikasi form laporan sederhana: foto (kamera/unggah, tanpa batas jumlah) otomatis
-diberi watermark koordinat presisi (kab/kota, kecamatan, desa/kelurahan) yang
-didapat dari Google Maps, lalu dikirim ke Supabase. Tidak ada data pelapor.
+Aplikasi form laporan dampak gempa: foto (kamera/unggah, tanpa batas jumlah)
+otomatis diberi watermark koordinat GPS presisi, lalu dikirim ke Supabase.
+Tidak ada data pelapor yang disimpan.
 
-**Stack:** Next.js (static export) — GitHub (version control + hosting via GitHub Pages) — Supabase (database & storage) — Nominatim/OpenStreetMap (reverse geocoding, gratis tanpa API key).
+**Stack:** Next.js (static export) — GitHub (version control + hosting via GitHub Pages) — Supabase (database & storage).
 
 ## 1. Setup Supabase
 
@@ -13,18 +13,18 @@ didapat dari Google Maps, lalu dikirim ke Supabase. Tidak ada data pelapor.
 3. Buka **Storage**, buat bucket baru bernama `foto-laporan`, set sebagai **Public**.
 4. Catat `Project URL` dan `anon public key` dari **Settings > API**.
 
-## 2. Reverse geocoding (lokasi)
+## 2. Lokasi (GPS + pilihan wilayah manual)
 
-Tidak perlu setup apa pun — aplikasi ini memakai **Nominatim (OpenStreetMap)**,
-layanan gratis tanpa API key untuk mengubah koordinat GPS menjadi nama
-kabupaten/kota, kecamatan, dan desa/kelurahan. Logikanya ada di
-`src/lib/geocode.js`.
+Tidak ada API geocoding berbayar yang dipakai. Koordinat lat/long murni
+diambil dari GPS perangkat lewat `navigator.geolocation` (bawaan browser,
+gratis). Ada juga link "Lihat di Google Maps" yang cuma berupa URL biasa
+(`google.com/maps?q=lat,lng`) — bukan panggilan API, jadi tidak ada biaya.
 
-Catatan: Nominatim punya batas wajar 1 request/detik dan tidak sepresisi
-Google Maps untuk level desa/kelurahan di sebagian wilayah Indonesia. Kalau
-nanti aplikasi butuh trafik besar atau akurasi lebih tinggi, bisa
-dipertimbangkan self-hosting Nominatim atau menambah fallback data wilayah
-resmi (misal dataset `emsifa/api-wilayah-indonesia` di GitHub).
+Kabupaten/kota dan kecamatan dipilih dari dropdown berisi 8 kabupaten di
+Pulau Flores beserta kecamatannya (data di `src/lib/wilayahFlores.js`,
+disusun dari BPS/Wikipedia), dengan opsi "Lainnya (ketik manual)" kalau
+kecamatan yang dicari belum ada di daftar. Desa/kelurahan selalu diketik
+manual karena jumlahnya ribuan dan sering berubah.
 
 ## 3. Jalankan secara lokal
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import { IconCamera } from './icons';
 
 /**
  * Tombol untuk mengambil foto langsung dari kamera perangkat.
@@ -33,10 +34,12 @@ export default function CameraCapture({ onCapture, disabled }) {
       />
       <button
         type="button"
+        className="btn-foto"
         onClick={() => inputRef.current?.click()}
         disabled={disabled}
       >
-        📷 Ambil Foto
+        <IconCamera />
+        Ambil Foto
       </button>
     </div>
   );

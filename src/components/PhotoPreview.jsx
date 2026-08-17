@@ -1,12 +1,14 @@
 'use client';
 
+import { IconTrash } from './icons';
+
 /**
  * Menampilkan daftar foto yang sudah diambil/diunggah (sudah ber-watermark),
  * dengan tombol hapus per foto. Jumlah foto tidak dibatasi.
  */
 export default function PhotoPreview({ photos, onRemove }) {
   if (!photos.length) {
-    return <p className="photo-preview-empty">Belum ada foto.</p>;
+    return <p className="photo-preview-empty">Belum ada foto ditambahkan.</p>;
   }
 
   return (
@@ -14,8 +16,13 @@ export default function PhotoPreview({ photos, onRemove }) {
       {photos.map((photo, index) => (
         <div key={photo.id} className="photo-preview-item">
           <img src={photo.previewUrl} alt={`Foto ${index + 1}`} />
-          <button type="button" onClick={() => onRemove(photo.id)}>
-            Hapus
+          <button
+            type="button"
+            className="photo-preview-hapus"
+            onClick={() => onRemove(photo.id)}
+            aria-label={`Hapus foto ${index + 1}`}
+          >
+            <IconTrash />
           </button>
         </div>
       ))}

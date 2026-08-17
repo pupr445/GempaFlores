@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Seismogram from '../../components/Seismogram';
-import NavTabs from '../../components/NavTabs';
+import AppHeader from '../../components/AppHeader';
+import { IconLoader, IconAlert, IconMapPin } from '../../components/icons';
 import { supabase } from '../../lib/supabaseClient';
 
 /**
@@ -38,27 +38,18 @@ export default function HalamanRiwayat() {
 
   return (
     <>
-      <header className="app-header">
-        <div className="app-header-inner">
-          <h1 className="app-title">Lapor Dampak Gempa</h1>
-          <p className="app-subtitle">
-            Laporan lapangan tercatat lokasi &amp; waktu otomatis
-          </p>
-          <Seismogram />
-          <NavTabs />
-        </div>
-      </header>
+      <AppHeader subtitle="Arsip laporan lapangan yang sudah tercatat" />
 
       <main className="halaman-riwayat">
-        <span className="riwayat-badge">Hanya lihat &middot; tidak bisa diubah</span>
+        <span className="riwayat-badge"><IconMapPin size={13} /> Hanya lihat &middot; tidak bisa diubah</span>
 
         {status === 'loading' && (
-          <p className="riwayat-loading">Memuat data laporan…</p>
+          <p className="riwayat-loading"><IconLoader size={16} /> Memuat data laporan…</p>
         )}
 
         {status === 'error' && (
           <p className="riwayat-error">
-            Gagal memuat data. Periksa koneksi atau coba muat ulang halaman.
+            <IconAlert size={16} /> Gagal memuat data. Periksa koneksi lalu muat ulang halaman.
           </p>
         )}
 

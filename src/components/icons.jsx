@@ -146,3 +146,63 @@ export function IconHistory(props) {
     </svg>
   );
 }
+
+export function IconLock(props) {
+  return (
+    <svg {...base} width={props.size || 20} height={props.size || 20} className={props.className}>
+      <rect x="5" y="10.5" width="14" height="9" rx="1.8" />
+      <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
+
+export function IconLogout(props) {
+  return (
+    <svg {...base} width={props.size || 18} height={props.size || 18} className={props.className}>
+      <path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3" />
+      <path d="M14 15.5 19 12l-5-3.5" />
+      <path d="M19 12H9" />
+    </svg>
+  );
+}
+
+export function IconDownload(props) {
+  return (
+    <svg {...base} width={props.size || 18} height={props.size || 18} className={props.className}>
+      <path d="M12 4v11.5" />
+      <path d="M7.5 11 12 15.5 16.5 11" />
+      <path d="M4.5 17v1.5A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5V17" />
+    </svg>
+  );
+}
+
+export function IconUsers(props) {
+  return (
+    <svg {...base} width={props.size || 20} height={props.size || 20} className={props.className}>
+      <circle cx="8.5" cy="8" r="3" />
+      <path d="M2.7 19c.6-3 2.9-5 5.8-5s5.2 2 5.8 5" />
+      <circle cx="17" cy="9" r="2.4" />
+      <path d="M15.3 14.3c2.3.3 4 2.1 4.4 4.7" />
+    </svg>
+  );
+}
+
+export function IconFileSpreadsheet(props) {
+  return (
+    <svg {...base} width={props.size || 20} height={props.size || 20} className={props.className}>
+      <path d="M6 3.5h8l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V5A1.5 1.5 0 0 1 5.5 3.5H6Z" />
+      <path d="M14 3.5V8h4" />
+      <path d="M8 12.5h8M8 15.5h8M8 18h5" />
+    </svg>
+  );
+}
+
+export function IconFileText(props) {
+  return (
+    <svg {...base} width={props.size || 20} height={props.size || 20} className={props.className}>
+      <path d="M6 3.5h8l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V5A1.5 1.5 0 0 1 5.5 3.5H6Z" />
+      <path d="M14 3.5V8h4" />
+      <path d="M8 12.5h8M8 15.5h5M8 18h6" />
+    </svg>
+  );
+}

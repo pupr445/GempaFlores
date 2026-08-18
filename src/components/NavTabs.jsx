@@ -10,7 +10,7 @@ export default function NavTabs() {
 
   return (
     <nav className="nav-tabs">
-      <Link href="/" className={`nav-tab ${!isRiwayat ? 'nav-tab-active' : ''}`}>
+      <Link href="/lapor" className={`nav-tab ${!isRiwayat ? 'nav-tab-active' : ''}`}>
         <IconClipboard size={16} />
         Buat Laporan
       </Link>

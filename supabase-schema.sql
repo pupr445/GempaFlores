@@ -13,6 +13,7 @@
 -- );
 -- alter table video_laporan enable row level security;
 -- create policy "publik boleh insert video" on video_laporan for insert with check (true);
+-- create policy "publik boleh baca video" on video_laporan for select using (true);
 -- (lalu buat Storage bucket publik bernama "video-laporan")
 
 create table if not exists laporan (
@@ -60,10 +61,21 @@ create policy "publik boleh insert video"
   on video_laporan for insert
   with check (true);
 
--- (Opsional) izinkan publik membaca laporan, misal untuk halaman riwayat
--- create policy "publik boleh baca laporan" on laporan for select using (true);
--- create policy "publik boleh baca foto" on foto_laporan for select using (true);
--- create policy "publik boleh baca video" on video_laporan for select using (true);
+-- Izinkan publik MEMBACA data juga — wajib, karena halaman Riwayat (/riwayat)
+-- menampilkan laporan yang sudah masuk. Tanpa policy select ini, data tetap
+-- bisa ke-insert saat kirim laporan, tapi tidak akan pernah muncul lagi di
+-- halaman Riwayat karena RLS memblokir pembacaan.
+create policy "publik boleh baca laporan"
+  on laporan for select
+  using (true);
+
+create policy "publik boleh baca foto"
+  on foto_laporan for select
+  using (true);
+
+create policy "publik boleh baca video"
+  on video_laporan for select
+  using (true);
 
 -- Setelah menjalankan script ini, buat Storage bucket bernama "foto-laporan"
 -- dan "video-laporan" lewat Supabase Dashboard > Storage > New bucket,

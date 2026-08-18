@@ -1,0 +1,23 @@
+# Konfigurasi Cloudflare Worker "gempaflores-storage".
+# Panduan lengkap ada di ../PANDUAN-B2.md
+
+name = "gempaflores-storage"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+
+# Nilai di sini TIDAK rahasia (nama bucket & region B2 boleh publik).
+# Kredensial rahasia (B2_KEY_ID, B2_APPLICATION_KEY) diisi terpisah lewat:
+#   npx wrangler secret put B2_KEY_ID
+#   npx wrangler secret put B2_APPLICATION_KEY
+# JANGAN taruh kredensial itu di file ini.
+[vars]
+# Alamat GitHub Pages aplikasi kamu (tanpa slash di akhir)
+ALLOWED_ORIGIN = "https://pupr445.github.io/GempaFlores"
+# Region akun B2 kamu, terlihat di halaman Buckets Backblaze
+# (contoh: us-west-004, eu-central-003)
+B2_REGION = "us-east-005"
+# Nama 2 bucket PRIVATE yang kamu buat di Backblaze (harus unik secara
+# global, jadi kalau nama ini sudah dipakai orang lain, ganti sesukanya
+# asal konsisten dengan yang dibuat di Backblaze)
+B2_BUCKET_FOTO = "gempaflores-foto"
+B2_BUCKET_VIDEO = "gempaflores-video"

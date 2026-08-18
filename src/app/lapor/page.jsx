@@ -13,6 +13,7 @@ import { IconLoader, IconAlert, IconCheck } from '../../components/icons';
 import { tambahWatermark } from '../../lib/watermark';
 import { validasiUkuranVideo, validasiDurasiVideo, MAKS_UKURAN_VIDEO_MB, MAKS_DURASI_VIDEO_DETIK } from '../../lib/video';
 import { supabase } from '../../lib/supabaseClient';
+import { unggahFile } from '../../lib/storageUpload';
 
 let idCounter = 0;
 const buatId = (prefix = 'foto') => `${prefix}-${Date.now()}-${idCounter++}`;
@@ -136,25 +137,22 @@ export default function HalamanLaporan() {
 
       if (errLaporan) throw errLaporan;
 
-      // File foto/video disimpan di Supabase Storage, metadatanya di
-      // tabel foto_laporan/video_laporan.
+      // File foto/video diunggah lewat Worker (proxy ke Backblaze B2,
+      // lihat /cloudflare-worker), metadatanya tetap di tabel
+      // foto_laporan/video_laporan di Supabase seperti biasa.
       for (const foto of photos) {
-        const namaFile = `${laporan.id}/${buatId()}.jpg`;
-        const { error: errUpload } = await supabase.storage
-          .from('foto-laporan')
-          .upload(namaFile, foto.blob, { contentType: 'image/jpeg' });
-
-        if (errUpload) throw errUpload;
-
-        const { data: publicUrlData } = supabase.storage
-          .from('foto-laporan')
-          .getPublicUrl(namaFile);
+        const url = await unggahFile({
+          blob: foto.blob,
+          laporanId: laporan.id,
+          kind: 'foto',
+          namaFile: `${buatId()}.jpg`,
+        });
 
         const { error: errInsertFoto } = await supabase
           .from('foto_laporan')
           .insert({
             laporan_id: laporan.id,
-            url: publicUrlData.publicUrl,
+            url,
           });
 
         if (errInsertFoto) throw errInsertFoto;
@@ -162,22 +160,18 @@ export default function HalamanLaporan() {
 
       for (const video of videos) {
         const ekstensi = (video.blob.name?.split('.').pop() || 'mp4').toLowerCase();
-        const namaFile = `${laporan.id}/${buatId('video')}.${ekstensi}`;
-        const { error: errUpload } = await supabase.storage
-          .from('video-laporan')
-          .upload(namaFile, video.blob, { contentType: video.blob.type || 'video/mp4' });
-
-        if (errUpload) throw errUpload;
-
-        const { data: publicUrlData } = supabase.storage
-          .from('video-laporan')
-          .getPublicUrl(namaFile);
+        const url = await unggahFile({
+          blob: video.blob,
+          laporanId: laporan.id,
+          kind: 'video',
+          namaFile: `${buatId('video')}.${ekstensi}`,
+        });
 
         const { error: errInsertVideo } = await supabase
           .from('video_laporan')
           .insert({
             laporan_id: laporan.id,
-            url: publicUrlData.publicUrl,
+            url,
           });
 
         if (errInsertVideo) throw errInsertVideo;

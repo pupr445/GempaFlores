@@ -1,0 +1,15 @@
+{
+  "name": "migrasi-ke-b2",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "migrasi": "node migrasi-ke-b2.mjs",
+    "migrasi:dry-run": "node migrasi-ke-b2.mjs --dry-run"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.600.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "dotenv": "^16.4.5"
+  }
+}

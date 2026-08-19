@@ -11,30 +11,51 @@ import { supabase } from '../../lib/supabaseClient';
  * sengaja tidak diberi izin UPDATE/DELETE untuk kunci publik, jadi data
  * yang sudah masuk tidak bisa diubah siapa pun lewat aplikasi ini.
  */
+const JUMLAH_PER_HALAMAN = 20;
+
 export default function HalamanRiwayat() {
   const [laporanList, setLaporanList] = useState([]);
   const [status, setStatus] = useState('loading'); // loading | ready | error
+  const [halaman, setHalaman] = useState(0);
+  const [sedangMuatLagi, setSedangMuatLagi] = useState(false);
+  const [masihAdaLagi, setMasihAdaLagi] = useState(true);
 
-  useEffect(() => {
-    async function ambilData() {
-      setStatus('loading');
-      const { data, error } = await supabase
-        .from('laporan')
-        .select('*, foto_laporan(id, url), video_laporan(id, url)')
-        .order('created_at', { ascending: false });
+  async function ambilData(halamanKe) {
+    const dari = halamanKe * JUMLAH_PER_HALAMAN;
+    const sampai = dari + JUMLAH_PER_HALAMAN - 1;
 
-      if (error) {
-        console.error(error);
-        setStatus('error');
-        return;
-      }
+    const { data, error } = await supabase
+      .from('laporan')
+      .select('*, foto_laporan(id, url), video_laporan(id, url)')
+      .order('created_at', { ascending: false })
+      .range(dari, sampai);
 
-      setLaporanList(data || []);
-      setStatus('ready');
+    if (error) {
+      console.error(error);
+      setStatus('error');
+      return;
     }
 
-    ambilData();
+    setLaporanList((sebelumnya) =>
+      halamanKe === 0 ? (data || []) : [...sebelumnya, ...(data || [])]
+    );
+    setMasihAdaLagi((data || []).length === JUMLAH_PER_HALAMAN);
+    setStatus('ready');
+  }
+
+  useEffect(() => {
+    setStatus('loading');
+    setHalaman(0);
+    ambilData(0);
   }, []);
+
+  async function muatLebihBanyak() {
+    setSedangMuatLagi(true);
+    const halamanBaru = halaman + 1;
+    await ambilData(halamanBaru);
+    setHalaman(halamanBaru);
+    setSedangMuatLagi(false);
+  }
 
   return (
     <>
@@ -117,6 +138,23 @@ export default function HalamanRiwayat() {
               )}
             </article>
           ))}
+
+        {status === 'ready' && masihAdaLagi && (
+          <button
+            type="button"
+            className="riwayat-muat-lagi"
+            onClick={muatLebihBanyak}
+            disabled={sedangMuatLagi}
+          >
+            {sedangMuatLagi ? (
+              <>
+                <IconLoader size={16} /> Memuat…
+              </>
+            ) : (
+              'Muat lebih banyak'
+            )}
+          </button>
+        )}
       </main>
     </>
   );

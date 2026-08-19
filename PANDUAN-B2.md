@@ -81,7 +81,7 @@ Kerjakan berurutan dari atas ke bawah.
    Setelah selesai, Wrangler menampilkan URL Worker-nya, bentuknya
    seperti:
    ```
-   https://gempaflores-storage.namaakunmu.workers.dev
+   https://gempaflores-storage.pupr445.workers.dev
    ```
    **Catat URL ini** — dipakai di Bagian C & D.
 
@@ -92,7 +92,7 @@ Kerjakan berurutan dari atas ke bawah.
 1. Di root project, tambahkan baris berikut ke `.env.local` (untuk
    development lokal):
    ```
-   NEXT_PUBLIC_UPLOAD_WORKER_URL=https://gempaflores-storage.namaakunmu.workers.dev
+   NEXT_PUBLIC_UPLOAD_WORKER_URL=https://gempaflores-storage.pupr445.workers.dev
    ```
 
 2. Untuk yang di-deploy ke GitHub Pages: repo di GitHub → **Settings**

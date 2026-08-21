@@ -141,6 +141,13 @@ export default function HalamanRiwayat() {
           </div>
         )}
 
+        <p className="riwayat-catatan-kategori">
+          Kategori jenis infrastruktur (Jalan dan Jembatan, Sumber Daya Air, Cipta Karya,
+          Perumahan dan Permukiman) baru mulai dicatat sejak <strong>21 Agustus 2026, pukul 12.00 WITA</strong>.
+          Laporan yang masuk sebelum tanggal tersebut belum memiliki kategori dan hanya
+          terhitung pada kartu &ldquo;Semua Laporan&rdquo;.
+        </p>
+
         <label className="field riwayat-filter">
           <span className="field-label">Tampilkan jenis</span>
           <select value={filterJenis} onChange={(e) => setFilterJenis(e.target.value)}>

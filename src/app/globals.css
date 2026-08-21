@@ -732,6 +732,21 @@ textarea {
   line-height: 1.3;
 }
 
+.riwayat-catatan-kategori {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  background: var(--laut-tint);
+  border: 1px solid var(--laut);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin: 0 0 14px;
+}
+
+.riwayat-catatan-kategori strong {
+  color: var(--ink);
+}
+
 .riwayat-filter {
   margin-bottom: 16px;
 }

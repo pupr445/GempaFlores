@@ -12,7 +12,7 @@ compatibility_date = "2026-08-01"
 # JANGAN taruh kredensial itu di file ini.
 [vars]
 # Alamat GitHub Pages aplikasi kamu (tanpa slash di akhir)
-ALLOWED_ORIGIN = "https://pupr445.github.io/GempaFlores"
+ALLOWED_ORIGIN = "https://pupr445.github.io"
 # Region akun B2 kamu, terlihat di halaman Buckets Backblaze
 # (contoh: us-west-004, eu-central-003)
 B2_REGION = "us-east-005"

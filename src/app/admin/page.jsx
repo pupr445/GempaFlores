@@ -12,10 +12,14 @@ import {
   IconCheck,
 } from '../../components/icons';
 import { ambilLaporanRentang, exportExcel, exportPdf, unduhBlob } from '../../lib/exportLaporan';
+import { DAFTAR_JENIS_INFRASTRUKTUR } from '../../lib/infrastruktur';
+
+const OPSI_SEMUA_JENIS = 'Semua Jenis';
 
 function IsiDasbor() {
   const [tanggalMulai, setTanggalMulai] = useState('');
   const [tanggalSelesai, setTanggalSelesai] = useState('');
+  const [jenisInfrastruktur, setJenisInfrastruktur] = useState(OPSI_SEMUA_JENIS);
   const [format, setFormat] = useState('excel'); // 'excel' | 'pdf'
   const [memproses, setMemproses] = useState(false);
   const [status, setStatus] = useState({ jenis: '', pesan: '' }); // '' | info | error | sukses
@@ -25,10 +29,17 @@ function IsiDasbor() {
     setStatus({ jenis: 'info', pesan: 'Mengambil data laporan…' });
 
     try {
-      const data = await ambilLaporanRentang(tanggalMulai || null, tanggalSelesai || null);
+      const filterJenis = jenisInfrastruktur === OPSI_SEMUA_JENIS ? null : jenisInfrastruktur;
+      const data = await ambilLaporanRentang(tanggalMulai || null, tanggalSelesai || null, filterJenis);
 
       if (data.length === 0) {
-        setStatus({ jenis: 'error', pesan: 'Tidak ada laporan pada rentang tanggal tersebut.' });
+        setStatus({
+          jenis: 'error',
+          pesan:
+            filterJenis
+              ? `Tidak ada laporan jenis "${filterJenis}" pada rentang tanggal tersebut.`
+              : 'Tidak ada laporan pada rentang tanggal tersebut.',
+        });
         setMemproses(false);
         return;
       }
@@ -41,7 +52,10 @@ function IsiDasbor() {
 
       const namaDari = tanggalMulai || 'semua';
       const namaSampai = tanggalSelesai || 'semua';
-      const namaFileDasar = `riwayat-laporan-gempaflores_${namaDari}_${namaSampai}`;
+      const namaJenisSlug = filterJenis
+        ? `_${filterJenis.toLowerCase().replace(/\s+/g, '-')}`
+        : '';
+      const namaFileDasar = `riwayat-laporan-gempaflores_${namaDari}_${namaSampai}${namaJenisSlug}`;
 
       if (format === 'excel') {
         const { buffer, gagalFoto } = await exportExcel(data, { onProgress });
@@ -51,7 +65,7 @@ function IsiDasbor() {
         unduhBlob(blob, `${namaFileDasar}.xlsx`);
         setStatus({
           jenis: 'sukses',
-          pesan: `Berhasil! ${data.length} laporan diekspor ke Excel.${
+          pesan: `Berhasil! ${data.length} laporan${filterJenis ? ` (${filterJenis})` : ''} diekspor ke Excel.${
             gagalFoto ? ` (${gagalFoto} foto gagal dimuat & dilewati)` : ''
           }`,
         });
@@ -60,7 +74,7 @@ function IsiDasbor() {
         unduhBlob(blob, `${namaFileDasar}.pdf`);
         setStatus({
           jenis: 'sukses',
-          pesan: `Berhasil! ${data.length} laporan diekspor ke PDF.${
+          pesan: `Berhasil! ${data.length} laporan${filterJenis ? ` (${filterJenis})` : ''} diekspor ke PDF.${
             gagalFoto ? ` (${gagalFoto} foto gagal dimuat & dilewati)` : ''
           }`,
         });
@@ -103,6 +117,16 @@ function IsiDasbor() {
           </label>
         </div>
         <p className="hint-tanggal">Kosongkan salah satu atau keduanya untuk mengambil semua data.</p>
+
+        <label className="field field-jenis-export">
+          <span className="field-label">Jenis infrastruktur</span>
+          <select value={jenisInfrastruktur} onChange={(e) => setJenisInfrastruktur(e.target.value)}>
+            <option value={OPSI_SEMUA_JENIS}>{OPSI_SEMUA_JENIS}</option>
+            {DAFTAR_JENIS_INFRASTRUKTUR.map((jenis) => (
+              <option key={jenis} value={jenis}>{jenis}</option>
+            ))}
+          </select>
+        </label>
 
         <div className="pilihan-format">
           <button

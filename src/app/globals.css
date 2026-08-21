@@ -1147,6 +1147,10 @@ textarea {
   color: var(--ink-soft);
 }
 
+.field-jenis-export {
+  margin-bottom: 16px;
+}
+
 .pilihan-format {
   display: flex;
   gap: 8px;

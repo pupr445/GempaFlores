@@ -13,8 +13,9 @@ import { supabase } from './supabaseClient';
 /**
  * Ambil semua laporan dalam rentang tanggal (inklusif), lengkap dengan
  * relasi foto & video. Tanggal boleh null/kosong untuk "tanpa batas".
+ * jenisInfrastruktur boleh null/kosong untuk "semua jenis".
  */
-export async function ambilLaporanRentang(tanggalMulai, tanggalSelesai) {
+export async function ambilLaporanRentang(tanggalMulai, tanggalSelesai, jenisInfrastruktur) {
   let query = supabase
     .from('laporan')
     .select('*, foto_laporan(id, url), video_laporan(id, url)')
@@ -22,6 +23,7 @@ export async function ambilLaporanRentang(tanggalMulai, tanggalSelesai) {
 
   if (tanggalMulai) query = query.gte('created_at', `${tanggalMulai}T00:00:00`);
   if (tanggalSelesai) query = query.lte('created_at', `${tanggalSelesai}T23:59:59`);
+  if (jenisInfrastruktur) query = query.eq('jenis_infrastruktur', jenisInfrastruktur);
 
   const { data, error } = await query;
   if (error) throw error;

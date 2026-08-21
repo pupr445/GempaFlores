@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import AdminGuard from '../../components/AdminGuard';
 import AdminHeader from '../../components/AdminHeader';
 import {
@@ -13,6 +13,7 @@ import {
 } from '../../components/icons';
 import { ambilLaporanRentang, exportExcel, exportPdf, unduhBlob } from '../../lib/exportLaporan';
 import { DAFTAR_JENIS_INFRASTRUKTUR } from '../../lib/infrastruktur';
+import { supabase } from '../../lib/supabaseClient';
 
 const OPSI_SEMUA_JENIS = 'Semua Jenis';
 
@@ -23,6 +24,48 @@ function IsiDasbor() {
   const [format, setFormat] = useState('excel'); // 'excel' | 'pdf'
   const [memproses, setMemproses] = useState(false);
   const [status, setStatus] = useState({ jenis: '', pesan: '' }); // '' | info | error | sukses
+  const [hitungan, setHitungan] = useState(null); // { total, perJenis: {jenis: n} }
+
+  const ambilHitungan = useCallback(async () => {
+    const queryTotal = supabase
+      .from('laporan')
+      .select('id', { count: 'exact', head: true });
+
+    const queryPerJenis = DAFTAR_JENIS_INFRASTRUKTUR.map((jenis) =>
+      supabase
+        .from('laporan')
+        .select('id', { count: 'exact', head: true })
+        .eq('jenis_infrastruktur', jenis)
+    );
+
+    const [hasilTotal, ...hasilPerJenis] = await Promise.all([queryTotal, ...queryPerJenis]);
+
+    const perJenis = {};
+    DAFTAR_JENIS_INFRASTRUKTUR.forEach((jenis, i) => {
+      perJenis[jenis] = hasilPerJenis[i]?.count ?? 0;
+    });
+
+    setHitungan({ total: hasilTotal?.count ?? 0, perJenis });
+  }, []);
+
+  // Hitungan realtime: ambil sekali di awal, lalu perbarui otomatis setiap
+  // ada laporan baru masuk — sama seperti di halaman Riwayat.
+  useEffect(() => {
+    ambilHitungan();
+
+    const channel = supabase
+      .channel('hitungan-laporan-admin')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'laporan' },
+        () => ambilHitungan()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [ambilHitungan]);
 
   const handleExport = async () => {
     setMemproses(true);
@@ -95,6 +138,30 @@ function IsiDasbor() {
           Unduh arsip laporan dalam rentang tanggal tertentu — Excel/PDF, lengkap dengan foto tertanam
           dan link video.
         </p>
+
+        {hitungan && (
+          <div className="riwayat-stats">
+            <button
+              type="button"
+              className={`riwayat-stat-kartu${jenisInfrastruktur === OPSI_SEMUA_JENIS ? ' riwayat-stat-aktif' : ''}`}
+              onClick={() => setJenisInfrastruktur(OPSI_SEMUA_JENIS)}
+            >
+              <span className="riwayat-stat-angka">{hitungan.total}</span>
+              <span className="riwayat-stat-label">Semua Laporan</span>
+            </button>
+            {DAFTAR_JENIS_INFRASTRUKTUR.map((jenis) => (
+              <button
+                type="button"
+                key={jenis}
+                className={`riwayat-stat-kartu${jenisInfrastruktur === jenis ? ' riwayat-stat-aktif' : ''}`}
+                onClick={() => setJenisInfrastruktur(jenis)}
+              >
+                <span className="riwayat-stat-angka">{hitungan.perJenis[jenis] ?? 0}</span>
+                <span className="riwayat-stat-label">{jenis}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="grid-tanggal">
           <label>

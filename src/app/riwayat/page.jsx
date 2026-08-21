@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import AppHeader from '../../components/AppHeader';
 import { IconLoader, IconAlert, IconMapPin } from '../../components/icons';
 import { supabase } from '../../lib/supabaseClient';
+import { DAFTAR_JENIS_INFRASTRUKTUR } from '../../lib/infrastruktur';
+
+const OPSI_SEMUA_JENIS = 'Semua Jenis';
 
 /**
  * Halaman ini murni untuk MEMBACA data — tidak ada tombol edit atau hapus
@@ -19,16 +22,24 @@ export default function HalamanRiwayat() {
   const [halaman, setHalaman] = useState(0);
   const [sedangMuatLagi, setSedangMuatLagi] = useState(false);
   const [masihAdaLagi, setMasihAdaLagi] = useState(true);
+  const [filterJenis, setFilterJenis] = useState(OPSI_SEMUA_JENIS);
+  const [hitungan, setHitungan] = useState(null); // { total, perJenis: {jenis: n} }
 
-  async function ambilData(halamanKe) {
+  const ambilData = useCallback(async (halamanKe, jenisAktif) => {
     const dari = halamanKe * JUMLAH_PER_HALAMAN;
     const sampai = dari + JUMLAH_PER_HALAMAN - 1;
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('laporan')
       .select('*, foto_laporan(id, url), video_laporan(id, url)')
       .order('created_at', { ascending: false })
       .range(dari, sampai);
+
+    if (jenisAktif && jenisAktif !== OPSI_SEMUA_JENIS) {
+      query = query.eq('jenis_infrastruktur', jenisAktif);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error(error);
@@ -41,18 +52,60 @@ export default function HalamanRiwayat() {
     );
     setMasihAdaLagi((data || []).length === JUMLAH_PER_HALAMAN);
     setStatus('ready');
-  }
+  }, []);
 
+  const ambilHitungan = useCallback(async () => {
+    const queryTotal = supabase
+      .from('laporan')
+      .select('id', { count: 'exact', head: true });
+
+    const queryPerJenis = DAFTAR_JENIS_INFRASTRUKTUR.map((jenis) =>
+      supabase
+        .from('laporan')
+        .select('id', { count: 'exact', head: true })
+        .eq('jenis_infrastruktur', jenis)
+    );
+
+    const [hasilTotal, ...hasilPerJenis] = await Promise.all([queryTotal, ...queryPerJenis]);
+
+    const perJenis = {};
+    DAFTAR_JENIS_INFRASTRUKTUR.forEach((jenis, i) => {
+      perJenis[jenis] = hasilPerJenis[i]?.count ?? 0;
+    });
+
+    setHitungan({ total: hasilTotal?.count ?? 0, perJenis });
+  }, []);
+
+  // Muat ulang daftar dari awal setiap kali filter jenis berganti.
   useEffect(() => {
     setStatus('loading');
     setHalaman(0);
-    ambilData(0);
-  }, []);
+    ambilData(0, filterJenis);
+  }, [filterJenis, ambilData]);
+
+  // Hitungan realtime: ambil sekali di awal, lalu perbarui otomatis setiap
+  // ada laporan baru masuk (tanpa perlu memuat ulang halaman).
+  useEffect(() => {
+    ambilHitungan();
+
+    const channel = supabase
+      .channel('hitungan-laporan')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'laporan' },
+        () => ambilHitungan()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [ambilHitungan]);
 
   async function muatLebihBanyak() {
     setSedangMuatLagi(true);
     const halamanBaru = halaman + 1;
-    await ambilData(halamanBaru);
+    await ambilData(halamanBaru, filterJenis);
     setHalaman(halamanBaru);
     setSedangMuatLagi(false);
   }
@@ -63,6 +116,40 @@ export default function HalamanRiwayat() {
 
       <main className="halaman-riwayat">
         <span className="riwayat-badge"><IconMapPin size={13} /> Hanya lihat &middot; tidak bisa diubah</span>
+
+        {hitungan && (
+          <div className="riwayat-stats">
+            <button
+              type="button"
+              className={`riwayat-stat-kartu${filterJenis === OPSI_SEMUA_JENIS ? ' riwayat-stat-aktif' : ''}`}
+              onClick={() => setFilterJenis(OPSI_SEMUA_JENIS)}
+            >
+              <span className="riwayat-stat-angka">{hitungan.total}</span>
+              <span className="riwayat-stat-label">Semua Laporan</span>
+            </button>
+            {DAFTAR_JENIS_INFRASTRUKTUR.map((jenis) => (
+              <button
+                type="button"
+                key={jenis}
+                className={`riwayat-stat-kartu${filterJenis === jenis ? ' riwayat-stat-aktif' : ''}`}
+                onClick={() => setFilterJenis(jenis)}
+              >
+                <span className="riwayat-stat-angka">{hitungan.perJenis[jenis] ?? 0}</span>
+                <span className="riwayat-stat-label">{jenis}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <label className="field riwayat-filter">
+          <span className="field-label">Tampilkan jenis</span>
+          <select value={filterJenis} onChange={(e) => setFilterJenis(e.target.value)}>
+            <option value={OPSI_SEMUA_JENIS}>{OPSI_SEMUA_JENIS}</option>
+            {DAFTAR_JENIS_INFRASTRUKTUR.map((jenis) => (
+              <option key={jenis} value={jenis}>{jenis}</option>
+            ))}
+          </select>
+        </label>
 
         {status === 'loading' && (
           <p className="riwayat-loading"><IconLoader size={16} /> Memuat data laporan…</p>
@@ -75,7 +162,11 @@ export default function HalamanRiwayat() {
         )}
 
         {status === 'ready' && laporanList.length === 0 && (
-          <p className="riwayat-kosong">Belum ada laporan yang masuk.</p>
+          <p className="riwayat-kosong">
+            {filterJenis === OPSI_SEMUA_JENIS
+              ? 'Belum ada laporan yang masuk.'
+              : `Belum ada laporan untuk jenis "${filterJenis}".`}
+          </p>
         )}
 
         {status === 'ready' &&
@@ -97,6 +188,14 @@ export default function HalamanRiwayat() {
                   {laporan.latitude?.toFixed(6)}, {laporan.longitude?.toFixed(6)}
                 </p>
               </div>
+
+              {laporan.jenis_infrastruktur && (
+                <p className="kartu-laporan-jenis">
+                  {laporan.jenis_infrastruktur}
+                  {laporan.sub_jenis_infrastruktur && ` · ${laporan.sub_jenis_infrastruktur}`}
+                  {laporan.nama_ruas_jalan && ` · ${laporan.nama_ruas_jalan}`}
+                </p>
+              )}
 
               {(laporan.nama_pelapor || laporan.no_hp) && (
                 <p className="kartu-laporan-kontak">

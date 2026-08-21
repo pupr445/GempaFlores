@@ -1,0 +1,109 @@
+// Data referensi untuk kategori "Jenis Infrastruktur" pada form laporan
+// dan filter di halaman Riwayat.
+
+export const OPSI_LAINNYA_RUAS = 'Ruas lain (ketik manual)';
+
+export const DAFTAR_JENIS_INFRASTRUKTUR = [
+  'Jalan dan Jembatan',
+  'Sumber Daya Air',
+  'Cipta Karya',
+  'Perumahan dan Permukiman',
+];
+
+export const DAFTAR_SUB_JALAN_JEMBATAN = ['Jalan', 'Jembatan'];
+
+// PENTING: daftar ruas jalan di bawah ini baru mencakup Kabupaten
+// Manggarai Barat s.d. Lembata (berdasarkan dokumen "Total Panjang Jalan
+// Provinsi" yang tersedia saat file ini dibuat). Kabupaten/kota lain di
+// NTT (mis. Kupang, TTS, TTU, Belu, Malaka, Alor, Rote Ndao, Sabu Raijua,
+// dan Sumba) BELUM tercantum karena datanya belum diberikan — tinggal
+// tambahkan blok baru di array ini begitu datanya tersedia. Pelapor tetap
+// bisa memilih "Ruas lain (ketik manual)" untuk ruas yang belum terdaftar.
+export const DAFTAR_RUAS_JALAN = [
+  {
+    kabupaten: 'Manggarai Barat',
+    ruas: [
+      'Sp. Nggorang - Sp. Terang',
+      'Sp. Terang - Sp. Noa',
+      'Sp. Noa - Wontong (Bts. Kab. Manggarai)',
+      'Sp. Noa - Golowelu (Bts. Kab. Manggarai)',
+    ],
+  },
+  {
+    kabupaten: 'Manggarai',
+    ruas: [
+      'Nggalak (Bts. Kab. Manggarai Barat) - Kedindi',
+      'Reo - Wae Gongger (Bts. Kab. Manggarai Timur)',
+      'Sp. Cumbi – Iteng',
+    ],
+  },
+  {
+    kabupaten: 'Manggarai Timur',
+    ruas: [
+      'Wae Gongger (Bts. Kab. Manggarai) - Pota',
+      'Pota - Labuan Kelambu (Bts. Kab. Ngada)',
+      'Bealaing - Wae Rasan (Bts. Kab. Ngada)',
+      'Borong - Nceang',
+      'Sp. Dangka Mangkang - Dampek',
+    ],
+  },
+  {
+    kabupaten: 'Ngada',
+    ruas: [
+      'Mbazang (Bts. Kab. Manggarai Timur) - Sp. Waepana',
+      'Malanuza - Maumbawa (Bts. Kab. Nagekeo)',
+      'Labuan Kelambu (Bts. Kab. Manggarai Timur) – Riung',
+      'Riung – Poma',
+      'Poma – Bajawa',
+      'Riung - Lengkosambi (Bts. Kab. Nagekeo)',
+    ],
+  },
+  {
+    kabupaten: 'Nagekeo',
+    ruas: [
+      'Nggolonio (Bts. Kab. Ngada) - Danga',
+      'Marapokot – Aeramo',
+      'Aeramo - Kaburea (Bts. Kab. Ende)',
+      'Maumbawa (Bts. Kab. Ngada) - Sp. Gako',
+    ],
+  },
+  {
+    kabupaten: 'Ende',
+    ruas: [
+      'Kaburea (Bts. Kab. Nagekeo) - Ranakolo',
+      'Detusoko – Maurole',
+      'Maurole - Koro (Bts. Kab. Sikka)',
+      'Wologai – Detukeli',
+      'Ende – Nuabosi',
+    ],
+  },
+  {
+    kabupaten: 'Sikka',
+    ruas: [
+      'Koro (Bts. Kab. Ende) - Maumere',
+      'Hepang – Sikka',
+      'Waepare – Bola',
+      'Napungmali - Mudajebak (Bts. Kab. Flores Timur)',
+    ],
+  },
+  {
+    kabupaten: 'Flores Timur',
+    ruas: [
+      'Mudajebak (Bts. Kab. Sikka) - Wairunu',
+      'Larantuka – Watowiti',
+      'Watowiti – Waiklibang',
+      'Wailebe – Waiwerang',
+      'Waiwerang - Sp. Withiama',
+      'Sp. Kolilanang – Sagu',
+      'Ritaebang – Lamakera',
+    ],
+  },
+  {
+    kabupaten: 'Lembata',
+    ruas: ['Balauring – Wairiang', 'Waijarang – Wulandoni'],
+  },
+];
+
+export function ruasUntukKabupaten(kabupaten) {
+  return DAFTAR_RUAS_JALAN.find((k) => k.kabupaten === kabupaten)?.ruas || [];
+}

@@ -14,12 +14,24 @@ import { tambahWatermark } from '../../lib/watermark';
 import { validasiUkuranVideo, validasiDurasiVideo, MAKS_UKURAN_VIDEO_MB, MAKS_DURASI_VIDEO_DETIK } from '../../lib/video';
 import { supabase } from '../../lib/supabaseClient';
 import { unggahFile } from '../../lib/storageUpload';
+import {
+  DAFTAR_JENIS_INFRASTRUKTUR,
+  DAFTAR_SUB_JALAN_JEMBATAN,
+  DAFTAR_RUAS_JALAN,
+  OPSI_LAINNYA_RUAS,
+  ruasUntukKabupaten,
+} from '../../lib/infrastruktur';
 
 let idCounter = 0;
 const buatId = (prefix = 'foto') => `${prefix}-${Date.now()}-${idCounter++}`;
 
 export default function HalamanLaporan() {
   const [lokasi, setLokasi] = useState(null);
+  const [jenisInfrastruktur, setJenisInfrastruktur] = useState('');
+  const [subJalanJembatan, setSubJalanJembatan] = useState('');
+  const [kabupatenRuas, setKabupatenRuas] = useState('');
+  const [ruasJalan, setRuasJalan] = useState('');
+  const [ruasJalanManual, setRuasJalanManual] = useState('');
   const [namaPelapor, setNamaPelapor] = useState('');
   const [noHp, setNoHp] = useState('');
   const [deskripsi, setDeskripsi] = useState('');
@@ -34,8 +46,25 @@ export default function HalamanLaporan() {
     setLokasi(data);
   }, []);
 
+  const daftarRuasKabupaten = kabupatenRuas ? ruasUntukKabupaten(kabupatenRuas) : [];
+  const ruasJalanTerpilih =
+    ruasJalan === OPSI_LAINNYA_RUAS ? ruasJalanManual.trim() : ruasJalan;
+
+  const perluSubJalanJembatan = jenisInfrastruktur === 'Jalan dan Jembatan';
+  const perluRuasJalan = perluSubJalanJembatan && subJalanJembatan === 'Jalan';
+
+  const jenisInfrastrukturLengkap =
+    jenisInfrastruktur !== '' &&
+    (!perluSubJalanJembatan || subJalanJembatan !== '') &&
+    (!perluRuasJalan || ruasJalanTerpilih !== '');
+
   // Video opsional, jadi tidak termasuk di sini — hanya syarat wajib.
-  const wajibLengkap = Boolean(lokasi) && namaPelapor.trim() !== '' && noHp.trim() !== '' && photos.length > 0;
+  const wajibLengkap =
+    Boolean(lokasi) &&
+    jenisInfrastrukturLengkap &&
+    namaPelapor.trim() !== '' &&
+    noHp.trim() !== '' &&
+    photos.length > 0;
 
   const prosesFotoBaru = async (file) => {
     if (!lokasi) {
@@ -111,6 +140,18 @@ export default function HalamanLaporan() {
       setStatus({ jenis: 'error', pesan: 'Lengkapi kabupaten/kota dan kecamatan sebelum mengirim.' });
       return;
     }
+    if (!jenisInfrastruktur) {
+      setStatus({ jenis: 'error', pesan: 'Pilih jenis infrastruktur yang dilaporkan.' });
+      return;
+    }
+    if (perluSubJalanJembatan && !subJalanJembatan) {
+      setStatus({ jenis: 'error', pesan: 'Pilih Jalan atau Jembatan.' });
+      return;
+    }
+    if (perluRuasJalan && !ruasJalanTerpilih) {
+      setStatus({ jenis: 'error', pesan: 'Pilih atau ketik nama ruas jalan.' });
+      return;
+    }
     if (photos.length === 0) {
       setStatus({ jenis: 'error', pesan: 'Tambahkan minimal satu foto sebelum mengirim.' });
       return;
@@ -126,6 +167,9 @@ export default function HalamanLaporan() {
           nama_pelapor: namaPelapor.trim(),
           no_hp: noHp.trim(),
           deskripsi,
+          jenis_infrastruktur: jenisInfrastruktur,
+          sub_jenis_infrastruktur: perluSubJalanJembatan ? subJalanJembatan : null,
+          nama_ruas_jalan: perluRuasJalan ? ruasJalanTerpilih : null,
           kabupaten_kota: lokasi.kabupatenKota,
           kecamatan: lokasi.kecamatan,
           desa_kelurahan: lokasi.desaKelurahan,
@@ -178,6 +222,11 @@ export default function HalamanLaporan() {
       }
 
       setStatus({ jenis: 'sukses', pesan: 'Laporan terkirim. Terima kasih atas laporannya.' });
+      setJenisInfrastruktur('');
+      setSubJalanJembatan('');
+      setKabupatenRuas('');
+      setRuasJalan('');
+      setRuasJalanManual('');
       setNamaPelapor('');
       setNoHp('');
       setDeskripsi('');
@@ -204,7 +253,100 @@ export default function HalamanLaporan() {
         </section>
 
         <section>
-          <p className="section-eyebrow">02 &middot; Deskripsi</p>
+          <p className="section-eyebrow">02 &middot; Jenis Infrastruktur</p>
+          <div className="field-grid">
+            <label className="field field-full">
+              <span className="field-label">Jenis Infrastruktur <span className="field-wajib">*</span></span>
+              <select
+                value={jenisInfrastruktur}
+                onChange={(e) => {
+                  setJenisInfrastruktur(e.target.value);
+                  setSubJalanJembatan('');
+                  setKabupatenRuas('');
+                  setRuasJalan('');
+                  setRuasJalanManual('');
+                }}
+                required
+              >
+                <option value="">Pilih jenis infrastruktur…</option>
+                {DAFTAR_JENIS_INFRASTRUKTUR.map((j) => (
+                  <option key={j} value={j}>{j}</option>
+                ))}
+              </select>
+            </label>
+
+            {perluSubJalanJembatan && (
+              <label className="field">
+                <span className="field-label">Jalan atau Jembatan <span className="field-wajib">*</span></span>
+                <select
+                  value={subJalanJembatan}
+                  onChange={(e) => {
+                    setSubJalanJembatan(e.target.value);
+                    setKabupatenRuas('');
+                    setRuasJalan('');
+                    setRuasJalanManual('');
+                  }}
+                  required
+                >
+                  <option value="">Pilih…</option>
+                  {DAFTAR_SUB_JALAN_JEMBATAN.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {perluRuasJalan && (
+              <>
+                <label className="field">
+                  <span className="field-label">Kabupaten (ruas jalan)</span>
+                  <select
+                    value={kabupatenRuas}
+                    onChange={(e) => {
+                      setKabupatenRuas(e.target.value);
+                      setRuasJalan('');
+                      setRuasJalanManual('');
+                    }}
+                  >
+                    <option value="">Pilih kabupaten…</option>
+                    {DAFTAR_RUAS_JALAN.map((k) => (
+                      <option key={k.kabupaten} value={k.kabupaten}>{k.kabupaten}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="field field-full">
+                  <span className="field-label">Nama Ruas Jalan <span className="field-wajib">*</span></span>
+                  <select
+                    value={ruasJalan}
+                    onChange={(e) => setRuasJalan(e.target.value)}
+                    disabled={!kabupatenRuas}
+                  >
+                    <option value="">
+                      {kabupatenRuas ? 'Pilih ruas jalan…' : 'Pilih kabupaten dulu'}
+                    </option>
+                    {daftarRuasKabupaten.map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                    {kabupatenRuas && <option value={OPSI_LAINNYA_RUAS}>{OPSI_LAINNYA_RUAS}</option>}
+                  </select>
+                  {ruasJalan === OPSI_LAINNYA_RUAS && (
+                    <input
+                      type="text"
+                      className="field-manual"
+                      placeholder="Ketik nama ruas jalan"
+                      value={ruasJalanManual}
+                      onChange={(e) => setRuasJalanManual(e.target.value)}
+                    />
+                  )}
+                </label>
+              </>
+            )}
+          </div>
+        </section>
+
+        <section>
+          <p className="section-eyebrow">03 &middot; Deskripsi</p>
           <textarea
             value={deskripsi}
             onChange={(e) => setDeskripsi(e.target.value)}
@@ -214,7 +356,7 @@ export default function HalamanLaporan() {
         </section>
 
         <section>
-          <p className="section-eyebrow">03 &middot; Kontak Pelapor</p>
+          <p className="section-eyebrow">04 &middot; Kontak Pelapor</p>
           <div className="field-grid">
             <label className="field">
               <span className="field-label">Nama Pelapor <span className="field-wajib">*</span></span>
@@ -244,7 +386,7 @@ export default function HalamanLaporan() {
         </section>
 
         <section>
-          <p className="section-eyebrow">04 &middot; Foto</p>
+          <p className="section-eyebrow">05 &middot; Foto</p>
           <div className="tombol-foto">
             <CameraCapture onCapture={prosesFotoBaru} disabled={memproses || !lokasi} />
             <FileUpload onUpload={prosesFotoBaru} disabled={memproses || !lokasi} />
@@ -256,7 +398,7 @@ export default function HalamanLaporan() {
         </section>
 
         <section>
-          <p className="section-eyebrow">05 &middot; Video (opsional)</p>
+          <p className="section-eyebrow">06 &middot; Video (opsional)</p>
           <div className="tombol-foto">
             <VideoCapture onCapture={prosesVideoBaru} disabled={memprosesVideo || !wajibLengkap} />
             <VideoUpload onUpload={prosesVideoBaru} disabled={memprosesVideo || !wajibLengkap} />

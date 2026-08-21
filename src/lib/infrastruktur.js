@@ -10,7 +10,43 @@ export const DAFTAR_JENIS_INFRASTRUKTUR = [
   'Perumahan dan Permukiman',
 ];
 
-export const DAFTAR_SUB_JALAN_JEMBATAN = ['Jalan', 'Jembatan'];
+export const DAFTAR_SUB_JALAN_JEMBATAN = [
+  'Jalan',
+  'Jembatan',
+  'Gorong-gorong',
+  'Drainase',
+  'Talud/Dinding Penahan Jalan',
+];
+
+// Sub-jenis per kategori infrastruktur. Setiap jenis infrastruktur punya
+// daftar sub-jenisnya sendiri, ditampilkan sebagai dropdown kedua setelah
+// jenis infrastruktur dipilih.
+export const SUB_JENIS_INFRASTRUKTUR = {
+  'Jalan dan Jembatan': DAFTAR_SUB_JALAN_JEMBATAN,
+  'Sumber Daya Air': [
+    'Bendungan',
+    'Embung',
+    'Saluran Irigasi',
+    'Bangunan/Sarana Pengendali Banjir',
+    'Infrastruktur Air Baku',
+  ],
+  'Cipta Karya': [
+    'Sistem Penyediaan Air Minum (SPAM)',
+    'Sanitasi',
+    'Drainase Permukiman',
+    'Bangunan Gedung/Fasilitas Umum',
+    'Infrastruktur Persampahan',
+  ],
+  'Perumahan dan Permukiman': [
+    'Rumah/Perumahan',
+    'Prasarana, Sarana dan Utilitas (PSU) Permukiman',
+    'Infrastruktur Kawasan Permukiman',
+  ],
+};
+
+export function subJenisUntuk(jenisInfrastruktur) {
+  return SUB_JENIS_INFRASTRUKTUR[jenisInfrastruktur] || [];
+}
 
 // PENTING: daftar ruas jalan di bawah ini baru mencakup Kabupaten
 // Manggarai Barat s.d. Lembata (berdasarkan dokumen "Total Panjang Jalan

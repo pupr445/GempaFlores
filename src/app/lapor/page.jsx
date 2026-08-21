@@ -16,7 +16,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { unggahFile } from '../../lib/storageUpload';
 import {
   DAFTAR_JENIS_INFRASTRUKTUR,
-  DAFTAR_SUB_JALAN_JEMBATAN,
+  subJenisUntuk,
   DAFTAR_RUAS_JALAN,
   OPSI_LAINNYA_RUAS,
   ruasUntukKabupaten,
@@ -28,7 +28,7 @@ const buatId = (prefix = 'foto') => `${prefix}-${Date.now()}-${idCounter++}`;
 export default function HalamanLaporan() {
   const [lokasi, setLokasi] = useState(null);
   const [jenisInfrastruktur, setJenisInfrastruktur] = useState('');
-  const [subJalanJembatan, setSubJalanJembatan] = useState('');
+  const [subJenis, setSubJenis] = useState('');
   const [kabupatenRuas, setKabupatenRuas] = useState('');
   const [ruasJalan, setRuasJalan] = useState('');
   const [ruasJalanManual, setRuasJalanManual] = useState('');
@@ -46,16 +46,17 @@ export default function HalamanLaporan() {
     setLokasi(data);
   }, []);
 
+  const daftarSubJenisAktif = subJenisUntuk(jenisInfrastruktur);
   const daftarRuasKabupaten = kabupatenRuas ? ruasUntukKabupaten(kabupatenRuas) : [];
   const ruasJalanTerpilih =
     ruasJalan === OPSI_LAINNYA_RUAS ? ruasJalanManual.trim() : ruasJalan;
 
-  const perluSubJalanJembatan = jenisInfrastruktur === 'Jalan dan Jembatan';
-  const perluRuasJalan = perluSubJalanJembatan && subJalanJembatan === 'Jalan';
+  const perluSubJenis = daftarSubJenisAktif.length > 0;
+  const perluRuasJalan = jenisInfrastruktur === 'Jalan dan Jembatan' && subJenis === 'Jalan';
 
   const jenisInfrastrukturLengkap =
     jenisInfrastruktur !== '' &&
-    (!perluSubJalanJembatan || subJalanJembatan !== '') &&
+    (!perluSubJenis || subJenis !== '') &&
     (!perluRuasJalan || ruasJalanTerpilih !== '');
 
   // Video opsional, jadi tidak termasuk di sini — hanya syarat wajib.
@@ -144,8 +145,8 @@ export default function HalamanLaporan() {
       setStatus({ jenis: 'error', pesan: 'Pilih jenis infrastruktur yang dilaporkan.' });
       return;
     }
-    if (perluSubJalanJembatan && !subJalanJembatan) {
-      setStatus({ jenis: 'error', pesan: 'Pilih Jalan atau Jembatan.' });
+    if (perluSubJenis && !subJenis) {
+      setStatus({ jenis: 'error', pesan: 'Pilih sub jenis infrastruktur.' });
       return;
     }
     if (perluRuasJalan && !ruasJalanTerpilih) {
@@ -168,7 +169,7 @@ export default function HalamanLaporan() {
           no_hp: noHp.trim(),
           deskripsi,
           jenis_infrastruktur: jenisInfrastruktur,
-          sub_jenis_infrastruktur: perluSubJalanJembatan ? subJalanJembatan : null,
+          sub_jenis_infrastruktur: perluSubJenis ? subJenis : null,
           nama_ruas_jalan: perluRuasJalan ? ruasJalanTerpilih : null,
           kabupaten_kota: lokasi.kabupatenKota,
           kecamatan: lokasi.kecamatan,
@@ -223,7 +224,7 @@ export default function HalamanLaporan() {
 
       setStatus({ jenis: 'sukses', pesan: 'Laporan terkirim. Terima kasih atas laporannya.' });
       setJenisInfrastruktur('');
-      setSubJalanJembatan('');
+      setSubJenis('');
       setKabupatenRuas('');
       setRuasJalan('');
       setRuasJalanManual('');
@@ -261,7 +262,7 @@ export default function HalamanLaporan() {
                 value={jenisInfrastruktur}
                 onChange={(e) => {
                   setJenisInfrastruktur(e.target.value);
-                  setSubJalanJembatan('');
+                  setSubJenis('');
                   setKabupatenRuas('');
                   setRuasJalan('');
                   setRuasJalanManual('');
@@ -275,21 +276,21 @@ export default function HalamanLaporan() {
               </select>
             </label>
 
-            {perluSubJalanJembatan && (
-              <label className="field">
-                <span className="field-label">Jalan atau Jembatan <span className="field-wajib">*</span></span>
+            {perluSubJenis && (
+              <label className="field field-full">
+                <span className="field-label">Sub Jenis Infrastruktur <span className="field-wajib">*</span></span>
                 <select
-                  value={subJalanJembatan}
+                  value={subJenis}
                   onChange={(e) => {
-                    setSubJalanJembatan(e.target.value);
+                    setSubJenis(e.target.value);
                     setKabupatenRuas('');
                     setRuasJalan('');
                     setRuasJalanManual('');
                   }}
                   required
                 >
-                  <option value="">Pilih…</option>
-                  {DAFTAR_SUB_JALAN_JEMBATAN.map((s) => (
+                  <option value="">Pilih sub jenis…</option>
+                  {daftarSubJenisAktif.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>

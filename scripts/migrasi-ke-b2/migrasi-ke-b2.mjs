@@ -79,11 +79,33 @@ async function sudahAdaDiB2(bucketB2, key) {
   }
 }
 
+async function ambilSemuaBaris(tabel) {
+  const UKURAN_HALAMAN = 1000;
+  let semua = [];
+  let dari = 0;
+
+  while (true) {
+    const sampai = dari + UKURAN_HALAMAN - 1;
+    const { data, error } = await supabase
+      .from(tabel)
+      .select('id, url')
+      .range(dari, sampai);
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    semua = semua.concat(data);
+    if (data.length < UKURAN_HALAMAN) break; // halaman terakhir
+    dari += UKURAN_HALAMAN;
+  }
+
+  return semua;
+}
+
 async function migrasiTabel({ tabel, kind, bucketB2 }) {
   console.log(`\n=== Migrasi tabel: ${tabel} ===`);
 
-  const { data: baris, error } = await supabase.from(tabel).select('id, url');
-  if (error) throw error;
+  const baris = await ambilSemuaBaris(tabel);
 
   console.log(`Ditemukan ${baris.length} baris.`);
 

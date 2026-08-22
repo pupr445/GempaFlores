@@ -2,11 +2,13 @@
 
 import Seismogram from './Seismogram';
 import NavTabs from './NavTabs';
+import StatusOffline from './StatusOffline';
 import { asetPublik } from '../lib/basePath';
 
 export default function AppHeader({ subtitle }) {
   return (
     <header className="app-header">
+      <StatusOffline />
       <div className="app-header-inner">
         <div className="instansi-row">
           <img

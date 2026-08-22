@@ -41,6 +41,20 @@ export function IconMapPin(props) {
   );
 }
 
+export function IconWifiOff(props) {
+  return (
+    <svg {...base} width={props.size || 20} height={props.size || 20} className={props.className}>
+      <path d="M2 8.5a17 17 0 0 1 4.5-2.9" />
+      <path d="M9.5 5a17 17 0 0 1 9.7 2.4" />
+      <path d="M5.5 12a11 11 0 0 1 3-1.9" />
+      <path d="M13.5 10.3A11 11 0 0 1 16 12" />
+      <path d="M8.5 15.5a5.5 5.5 0 0 1 4.3-1.1" />
+      <line x1="2" y1="2" x2="22" y2="22" />
+      <circle cx="12" cy="19" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function IconRefresh(props) {
   return (
     <svg {...base} width={props.size || 20} height={props.size || 20} className={props.className}>

@@ -673,6 +673,32 @@ textarea {
   color: var(--danger);
 }
 
+/* ---------- Status offline / antrian ---------- */
+
+.status-offline-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 16px;
+  padding: 8px 16px;
+  background: var(--laut-deep);
+  color: var(--paper);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.status-offline-banner span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-offline-banner-merah {
+  background: var(--danger);
+}
+
 /* ---------- Riwayat ---------- */
 
 .riwayat-badge {

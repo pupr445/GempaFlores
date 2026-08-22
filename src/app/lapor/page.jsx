@@ -12,8 +12,9 @@ import LocationTagger from '../../components/LocationTagger';
 import { IconLoader, IconAlert, IconCheck } from '../../components/icons';
 import { tambahWatermark } from '../../lib/watermark';
 import { validasiUkuranVideo, validasiDurasiVideo, MAKS_UKURAN_VIDEO_MB, MAKS_DURASI_VIDEO_DETIK } from '../../lib/video';
-import { supabase } from '../../lib/supabaseClient';
-import { unggahFile } from '../../lib/storageUpload';
+import { kirimDraftKeServer } from '../../lib/kirimLaporanServer';
+import { simpanKeAntrian } from '../../lib/offlineQueue';
+import { prosesAntrian } from '../../lib/offlineSync';
 import {
   DAFTAR_JENIS_INFRASTRUKTUR,
   subJenisUntuk,
@@ -161,68 +162,35 @@ export default function HalamanLaporan() {
     setMengirim(true);
     setStatus({ jenis: 'info', pesan: 'Mengirim laporan…' });
 
-    try {
-      const { data: laporan, error: errLaporan } = await supabase
-        .from('laporan')
-        .insert({
-          nama_pelapor: namaPelapor.trim(),
-          no_hp: noHp.trim(),
-          deskripsi,
-          jenis_infrastruktur: jenisInfrastruktur,
-          sub_jenis_infrastruktur: perluSubJenis ? subJenis : null,
-          nama_ruas_jalan: perluRuasJalan ? ruasJalanTerpilih : null,
-          kabupaten_kota: lokasi.kabupatenKota,
-          kecamatan: lokasi.kecamatan,
-          desa_kelurahan: lokasi.desaKelurahan,
-          latitude: lokasi.lat,
-          longitude: lokasi.lng,
-        })
-        .select()
-        .single();
+    // Draft dibangun dulu di sisi klien, id dibuat sendiri (bukan dari
+    // Supabase) supaya kalau nanti disimpan ke antrian offline lalu
+    // dikirim ulang, tidak jadi baris dobel.
+    const draft = {
+      id: crypto.randomUUID(),
+      dibuatPada: new Date().toISOString(),
+      fields: {
+        nama_pelapor: namaPelapor.trim(),
+        no_hp: noHp.trim(),
+        deskripsi,
+        jenis_infrastruktur: jenisInfrastruktur,
+        sub_jenis_infrastruktur: perluSubJenis ? subJenis : null,
+        nama_ruas_jalan: perluRuasJalan ? ruasJalanTerpilih : null,
+        kabupaten_kota: lokasi.kabupatenKota,
+        kecamatan: lokasi.kecamatan,
+        desa_kelurahan: lokasi.desaKelurahan,
+        latitude: lokasi.lat,
+        longitude: lokasi.lng,
+      },
+      // Foto sudah diberi watermark sejak diambil, jadi Blob di sini
+      // sudah final — tidak perlu proses tambahan saat dikirim ulang.
+      photos: photos.map((p) => ({ id: p.id, namaFile: `${p.id}.jpg`, blob: p.blob })),
+      videos: videos.map((v) => {
+        const ekstensi = (v.blob.name?.split('.').pop() || 'mp4').toLowerCase();
+        return { id: v.id, namaFile: `${v.id}.${ekstensi}`, blob: v.blob };
+      }),
+    };
 
-      if (errLaporan) throw errLaporan;
-
-      // File foto/video diunggah lewat Worker (proxy ke Backblaze B2,
-      // lihat /cloudflare-worker), metadatanya tetap di tabel
-      // foto_laporan/video_laporan di Supabase seperti biasa.
-      for (const foto of photos) {
-        const url = await unggahFile({
-          blob: foto.blob,
-          laporanId: laporan.id,
-          kind: 'foto',
-          namaFile: `${buatId()}.jpg`,
-        });
-
-        const { error: errInsertFoto } = await supabase
-          .from('foto_laporan')
-          .insert({
-            laporan_id: laporan.id,
-            url,
-          });
-
-        if (errInsertFoto) throw errInsertFoto;
-      }
-
-      for (const video of videos) {
-        const ekstensi = (video.blob.name?.split('.').pop() || 'mp4').toLowerCase();
-        const url = await unggahFile({
-          blob: video.blob,
-          laporanId: laporan.id,
-          kind: 'video',
-          namaFile: `${buatId('video')}.${ekstensi}`,
-        });
-
-        const { error: errInsertVideo } = await supabase
-          .from('video_laporan')
-          .insert({
-            laporan_id: laporan.id,
-            url,
-          });
-
-        if (errInsertVideo) throw errInsertVideo;
-      }
-
-      setStatus({ jenis: 'sukses', pesan: 'Laporan terkirim. Terima kasih atas laporannya.' });
+    const resetForm = () => {
       setJenisInfrastruktur('');
       setSubJenis('');
       setKabupatenRuas('');
@@ -235,9 +203,48 @@ export default function HalamanLaporan() {
       setPhotos([]);
       videos.forEach((v) => URL.revokeObjectURL(v.previewUrl));
       setVideos([]);
+    };
+
+    // Tidak ada sinyal sama sekali — jangan coba panggil server, langsung
+    // simpan ke HP. Nanti otomatis dikirim sendiri saat sinyal balik.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      try {
+        await simpanKeAntrian(draft);
+        setStatus({
+          jenis: 'sukses',
+          pesan: 'Sinyal tidak ada — laporan tersimpan di HP dan akan otomatis terkirim begitu ada sinyal.',
+        });
+        resetForm();
+      } catch (err) {
+        console.error(err);
+        setStatus({ jenis: 'error', pesan: 'Gagal menyimpan laporan di HP. Coba lagi.' });
+      } finally {
+        setMengirim(false);
+      }
+      return;
+    }
+
+    try {
+      await kirimDraftKeServer(draft);
+      setStatus({ jenis: 'sukses', pesan: 'Laporan terkirim. Terima kasih atas laporannya.' });
+      resetForm();
     } catch (err) {
       console.error(err);
-      setStatus({ jenis: 'error', pesan: 'Laporan gagal terkirim. Periksa koneksi lalu coba lagi.' });
+      // Sinyal ada tapi tidak stabil (request gagal di tengah jalan) —
+      // daripada laporan hilang, simpan ke antrian juga dan coba lagi
+      // otomatis nanti, alih-alih cuma nampilkan pesan error ke pelapor.
+      try {
+        await simpanKeAntrian(draft);
+        setStatus({
+          jenis: 'sukses',
+          pesan: 'Sinyal tidak stabil — laporan tersimpan di HP dan akan dicoba kirim ulang otomatis.',
+        });
+        resetForm();
+        prosesAntrian();
+      } catch (errSimpan) {
+        console.error(errSimpan);
+        setStatus({ jenis: 'error', pesan: 'Laporan gagal terkirim. Periksa koneksi lalu coba lagi.' });
+      }
     } finally {
       setMengirim(false);
     }

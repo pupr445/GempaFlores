@@ -22,6 +22,7 @@ let idCounter = 0;
 const buatId = (prefix = 'foto') => `survey-${prefix}-${Date.now()}-${idCounter++}`;
 
 function HalamanSurveyIsi() {
+  const [tabAktif, setTabAktif] = useState('form');
   const [lokasi, setLokasi] = useState(null);
   const [deskripsi, setDeskripsi] = useState('');
   const [photos, setPhotos] = useState([]);
@@ -172,88 +173,92 @@ function HalamanSurveyIsi() {
 
   return (
     <>
-      <SurveyHeader />
+      <SurveyHeader tabAktif={tabAktif} onGantiTab={setTabAktif} />
 
-      <main className="halaman-laporan">
-        <section>
-          <p className="section-eyebrow">01 &middot; Koordinat</p>
-          <SurveyLocationTagger onLocationReady={handleLocationReady} />
-        </section>
+      {tabAktif === 'form' ? (
+        <main className="halaman-laporan">
+          <section>
+            <p className="section-eyebrow">01 &middot; Koordinat</p>
+            <SurveyLocationTagger onLocationReady={handleLocationReady} />
+          </section>
 
-        <section>
-          <p className="section-eyebrow">02 &middot; Deskripsi</p>
-          <textarea
-            value={deskripsi}
-            onChange={(e) => setDeskripsi(e.target.value)}
-            placeholder="Kondisi di lapangan: kerusakan, situasi terkini…"
-            rows={4}
-          />
-        </section>
+          <section>
+            <p className="section-eyebrow">02 &middot; Deskripsi</p>
+            <textarea
+              value={deskripsi}
+              onChange={(e) => setDeskripsi(e.target.value)}
+              placeholder="Kondisi di lapangan: kerusakan, situasi terkini…"
+              rows={4}
+            />
+          </section>
 
-        <section>
-          <p className="section-eyebrow">03 &middot; Foto</p>
-          <div className="tombol-foto">
-            <CameraCapture onCapture={prosesFotoBaru} disabled={memproses || !lokasi} />
-            <FileUpload onUpload={prosesFotoBaru} disabled={memproses || !lokasi} />
-          </div>
-          {memproses && (
-            <p className="pesan-proses"><IconLoader size={16} /> Membubuhkan watermark lokasi ke foto…</p>
-          )}
-          <PhotoPreview photos={photos} onRemove={hapusFoto} />
-        </section>
+          <section>
+            <p className="section-eyebrow">03 &middot; Foto</p>
+            <div className="tombol-foto">
+              <CameraCapture onCapture={prosesFotoBaru} disabled={memproses || !lokasi} />
+              <FileUpload onUpload={prosesFotoBaru} disabled={memproses || !lokasi} />
+            </div>
+            {memproses && (
+              <p className="pesan-proses"><IconLoader size={16} /> Membubuhkan watermark lokasi ke foto…</p>
+            )}
+            <PhotoPreview photos={photos} onRemove={hapusFoto} />
+          </section>
 
-        <section>
-          <p className="section-eyebrow">04 &middot; Video (opsional)</p>
-          <div className="tombol-foto">
-            <VideoCapture onCapture={prosesVideoBaru} disabled={memprosesVideo || !wajibLengkap} />
-            <VideoUpload onUpload={prosesVideoBaru} disabled={memprosesVideo || !wajibLengkap} />
-          </div>
-          {memprosesVideo && (
-            <p className="pesan-proses"><IconLoader size={16} /> Memeriksa video…</p>
-          )}
-          {!wajibLengkap && (
+          <section>
+            <p className="section-eyebrow">04 &middot; Video (opsional)</p>
+            <div className="tombol-foto">
+              <VideoCapture onCapture={prosesVideoBaru} disabled={memprosesVideo || !wajibLengkap} />
+              <VideoUpload onUpload={prosesVideoBaru} disabled={memprosesVideo || !wajibLengkap} />
+            </div>
+            {memprosesVideo && (
+              <p className="pesan-proses"><IconLoader size={16} /> Memeriksa video…</p>
+            )}
+            {!wajibLengkap && (
+              <p className="pesan-proses">
+                <IconAlert size={16} /> Lengkapi koordinat dan minimal satu foto dahulu sebelum menambahkan video.
+              </p>
+            )}
+            <VideoPreview videos={videos} onRemove={hapusVideo} />
+            <p className="field-hint">
+              Maks {MAKS_UKURAN_VIDEO_MB}MB dan {MAKS_DURASI_VIDEO_DETIK} detik per video.
+            </p>
+          </section>
+
+          <button
+            type="button"
+            className="tombol-kirim"
+            onClick={kirimLaporan}
+            disabled={mengirim || memproses || memprosesVideo || !wajibLengkap}
+          >
+            {mengirim ? (<><IconLoader size={18} /> Mengirim…</>) : 'Kirim Laporan'}
+          </button>
+
+          {!wajibLengkap && !mengirim && (
             <p className="pesan-proses">
-              <IconAlert size={16} /> Lengkapi koordinat dan minimal satu foto dahulu sebelum menambahkan video.
+              <IconAlert size={16} /> Lengkapi koordinat dan minimal satu foto sebelum mengirim laporan.
             </p>
           )}
-          <VideoPreview videos={videos} onRemove={hapusVideo} />
-          <p className="field-hint">
-            Maks {MAKS_UKURAN_VIDEO_MB}MB dan {MAKS_DURASI_VIDEO_DETIK} detik per video.
-          </p>
-        </section>
 
-        <button
-          type="button"
-          className="tombol-kirim"
-          onClick={kirimLaporan}
-          disabled={mengirim || memproses || memprosesVideo || !wajibLengkap}
-        >
-          {mengirim ? (<><IconLoader size={18} /> Mengirim…</>) : 'Kirim Laporan'}
-        </button>
-
-        {!wajibLengkap && !mengirim && (
-          <p className="pesan-proses">
-            <IconAlert size={16} /> Lengkapi koordinat dan minimal satu foto sebelum mengirim laporan.
-          </p>
-        )}
-
-        {status.pesan && (
-          <p className={`pesan-status pesan-status-${status.jenis}`}>
-            {status.jenis === 'error' && <IconAlert size={16} />}
-            {status.jenis === 'sukses' && <IconCheck size={16} />}
-            {status.jenis === 'info' && <IconLoader size={16} />}
-            {status.pesan}
-          </p>
-        )}
-
-        <section className="panel-riwayat">
-          <h2>Riwayat Laporan</h2>
-          <p className="panel-export-desc">
-            Arsip laporan lapangan yang sudah tercatat, termasuk yang masuk dari mode Tim Survey.
-          </p>
-          <RiwayatLaporan includeSumberFilter />
-        </section>
-      </main>
+          {status.pesan && (
+            <p className={`pesan-status pesan-status-${status.jenis}`}>
+              {status.jenis === 'error' && <IconAlert size={16} />}
+              {status.jenis === 'sukses' && <IconCheck size={16} />}
+              {status.jenis === 'info' && <IconLoader size={16} />}
+              {status.pesan}
+            </p>
+          )}
+        </main>
+      ) : (
+        <main className="halaman-admin">
+          <section className="panel-riwayat">
+            <h2>Riwayat Laporan</h2>
+            <p className="panel-export-desc">
+              Arsip laporan lapangan yang sudah tercatat, termasuk yang masuk dari mode Tim Survey.
+            </p>
+            <RiwayatLaporan includeSumberFilter />
+          </section>
+        </main>
+      )}
     </>
   );
 }

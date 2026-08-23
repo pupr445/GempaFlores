@@ -3,9 +3,15 @@
 import { useRouter } from 'next/navigation';
 import { asetPublik } from '../lib/basePath';
 import { keluarDariModeSurvey } from '../lib/aksesSurvey';
-import { IconUsers, IconLogout } from './icons';
+import { IconUsers, IconLogout, IconClipboard, IconHistory } from './icons';
+import DasborTabs from './DasborTabs';
 
-export default function SurveyHeader() {
+const TAB_SURVEY = [
+  { key: 'form', label: 'Buat Laporan', icon: <IconClipboard size={16} /> },
+  { key: 'riwayat', label: 'Riwayat Laporan', icon: <IconHistory size={16} /> },
+];
+
+export default function SurveyHeader({ tabAktif, onGantiTab }) {
   const router = useRouter();
 
   const handleKeluar = () => {
@@ -40,6 +46,10 @@ export default function SurveyHeader() {
             <IconLogout size={15} /> Keluar Mode Survey
           </button>
         </div>
+
+        {tabAktif && onGantiTab && (
+          <DasborTabs tabs={TAB_SURVEY} aktif={tabAktif} onGanti={onGantiTab} />
+        )}
       </div>
     </header>
   );

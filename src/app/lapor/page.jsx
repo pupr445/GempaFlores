@@ -23,6 +23,7 @@ import {
   ruasUntukKabupaten,
   DAFTAR_DAERAH_IRIGASI,
   OPSI_LAINNYA_DI,
+  SUB_JENIS_DAERAH_IRIGASI,
   DAFTAR_TINGKAT_KERUSAKAN,
 } from '../../lib/infrastruktur';
 
@@ -62,7 +63,8 @@ export default function HalamanLaporan() {
 
   const perluSubJenis = daftarSubJenisAktif.length > 0;
   const perluRuasJalan = jenisInfrastruktur === 'Jalan dan Jembatan' && subJenis === 'Jalan';
-  const perluDaerahIrigasi = jenisInfrastruktur === 'Sumber Daya Air';
+  const perluDaerahIrigasi =
+    jenisInfrastruktur === 'Sumber Daya Air' && subJenis === SUB_JENIS_DAERAH_IRIGASI;
   const perluTingkatKerusakan = jenisInfrastruktur === 'Cipta Karya' && subJenis !== '';
 
   const jenisInfrastrukturLengkap =
@@ -321,6 +323,8 @@ export default function HalamanLaporan() {
                     setKabupatenRuas('');
                     setRuasJalan('');
                     setRuasJalanManual('');
+                    setDaerahIrigasi('');
+                    setDaerahIrigasiManual('');
                     setTingkatKerusakan('');
                   }}
                   required

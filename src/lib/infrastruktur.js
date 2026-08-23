@@ -21,12 +21,15 @@ export const DAFTAR_SUB_JALAN_JEMBATAN = [
 // Sub-jenis per kategori infrastruktur. Setiap jenis infrastruktur punya
 // daftar sub-jenisnya sendiri, ditampilkan sebagai dropdown kedua setelah
 // jenis infrastruktur dipilih.
+export const SUB_JENIS_DAERAH_IRIGASI = 'Daerah Irigasi (D.I.)';
+
 export const SUB_JENIS_INFRASTRUKTUR = {
   'Jalan dan Jembatan': DAFTAR_SUB_JALAN_JEMBATAN,
   'Sumber Daya Air': [
     'Bendungan',
     'Embung',
     'Saluran Irigasi',
+    SUB_JENIS_DAERAH_IRIGASI,
     'Bangunan/Sarana Pengendali Banjir',
     'Infrastruktur Air Baku',
   ],

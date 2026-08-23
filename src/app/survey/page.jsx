@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import SurveyHeader from '../../components/SurveyHeader';
 import SurveyGuard from '../../components/SurveyGuard';
+import RiwayatLaporan from '../../components/RiwayatLaporan';
 import SurveyLocationTagger from '../../components/SurveyLocationTagger';
 import CameraCapture from '../../components/CameraCapture';
 import FileUpload from '../../components/FileUpload';
@@ -244,6 +245,14 @@ function HalamanSurveyIsi() {
             {status.pesan}
           </p>
         )}
+
+        <section className="panel-riwayat">
+          <h2>Riwayat Laporan</h2>
+          <p className="panel-export-desc">
+            Arsip laporan lapangan yang sudah tercatat, termasuk yang masuk dari mode Tim Survey.
+          </p>
+          <RiwayatLaporan includeSumberFilter />
+        </section>
       </main>
     </>
   );

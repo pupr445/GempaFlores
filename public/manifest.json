@@ -2,7 +2,7 @@
   "name": "Lapor PUPR NTT — Lapor Dampak Gempa",
   "short_name": "Lapor PUPR NTT",
   "description": "Form laporan dampak gempa di Flores. Bisa dipakai offline, laporan otomatis terkirim saat sinyal ada.",
-  "start_url": "/GempaFlores/lapor",
+  "start_url": "/GempaFlores/",
   "scope": "/GempaFlores/",
   "display": "standalone",
   "orientation": "portrait-primary",

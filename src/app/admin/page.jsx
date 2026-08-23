@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import AdminGuard from '../../components/AdminGuard';
 import AdminHeader from '../../components/AdminHeader';
+import RiwayatLaporan from '../../components/RiwayatLaporan';
 import {
   IconDownload,
   IconFileSpreadsheet,
@@ -232,6 +233,14 @@ function IsiDasbor() {
           foto, hanya foto pertama yang ditampilkan sebagai gambar di kolom "Foto" — semua link foto
           tetap tersedia di kolom "Link Semua Foto" (Excel) / dicetak berjajar (PDF).
         </p>
+      </section>
+
+      <section className="panel-riwayat">
+        <h2>Riwayat Laporan</h2>
+        <p className="panel-export-desc">
+          Arsip laporan lapangan yang sudah tercatat, termasuk yang masuk dari mode Tim Survey.
+        </p>
+        <RiwayatLaporan includeSumberFilter />
       </section>
     </main>
   );

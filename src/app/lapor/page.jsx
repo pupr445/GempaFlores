@@ -667,6 +667,11 @@ export default function HalamanLaporan() {
 
         <section>
           <p className="section-eyebrow">06 &middot; Video (opsional)</p>
+          {jenisInfrastruktur === 'Perumahan dan Permukiman' && (
+            <p className="field-hint field-hint-foto">
+              Ambil video rumah tampak depan, kanan, kiri, dan belakang.
+            </p>
+          )}
           <div className="tombol-foto">
             <VideoCapture onCapture={prosesVideoBaru} disabled={memprosesVideo || !wajibLengkap} />
             <VideoUpload onUpload={prosesVideoBaru} disabled={memprosesVideo || !wajibLengkap} />

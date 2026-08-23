@@ -17,15 +17,17 @@ import { DAFTAR_JENIS_INFRASTRUKTUR } from '../../lib/infrastruktur';
 import { supabase } from '../../lib/supabaseClient';
 
 const OPSI_SEMUA_JENIS = 'Semua Jenis';
+const SUMBER_TIM_SURVEY = 'tim_survey';
 
 function PanelExport() {
   const [tanggalMulai, setTanggalMulai] = useState('');
   const [tanggalSelesai, setTanggalSelesai] = useState('');
   const [jenisInfrastruktur, setJenisInfrastruktur] = useState(OPSI_SEMUA_JENIS);
+  const [sumberFilter, setSumberFilter] = useState(null); // null | 'tim_survey'
   const [format, setFormat] = useState('excel'); // 'excel' | 'pdf'
   const [memproses, setMemproses] = useState(false);
   const [status, setStatus] = useState({ jenis: '', pesan: '' }); // '' | info | error | sukses
-  const [hitungan, setHitungan] = useState(null); // { total, perJenis: {jenis: n} }
+  const [hitungan, setHitungan] = useState(null); // { total, perJenis: {jenis: n}, timSurvey: n }
 
   const ambilHitungan = useCallback(async () => {
     const queryTotal = supabase
@@ -39,14 +41,27 @@ function PanelExport() {
         .eq('jenis_infrastruktur', jenis)
     );
 
-    const [hasilTotal, ...hasilPerJenis] = await Promise.all([queryTotal, ...queryPerJenis]);
+    const queryTimSurvey = supabase
+      .from('laporan')
+      .select('id', { count: 'exact', head: true })
+      .eq('sumber', SUMBER_TIM_SURVEY);
+
+    const [hasilTotal, hasilTimSurvey, ...hasilPerJenis] = await Promise.all([
+      queryTotal,
+      queryTimSurvey,
+      ...queryPerJenis,
+    ]);
 
     const perJenis = {};
     DAFTAR_JENIS_INFRASTRUKTUR.forEach((jenis, i) => {
       perJenis[jenis] = hasilPerJenis[i]?.count ?? 0;
     });
 
-    setHitungan({ total: hasilTotal?.count ?? 0, perJenis });
+    setHitungan({
+      total: hasilTotal?.count ?? 0,
+      perJenis,
+      timSurvey: hasilTimSurvey?.count ?? 0,
+    });
   }, []);
 
   // Hitungan realtime: ambil sekali di awal, lalu perbarui otomatis setiap
@@ -74,7 +89,7 @@ function PanelExport() {
 
     try {
       const filterJenis = jenisInfrastruktur === OPSI_SEMUA_JENIS ? null : jenisInfrastruktur;
-      const data = await ambilLaporanRentang(tanggalMulai || null, tanggalSelesai || null, filterJenis);
+      const data = await ambilLaporanRentang(tanggalMulai || null, tanggalSelesai || null, filterJenis, sumberFilter);
 
       if (data.length === 0) {
         setStatus({
@@ -82,7 +97,9 @@ function PanelExport() {
           pesan:
             filterJenis
               ? `Tidak ada laporan jenis "${filterJenis}" pada rentang tanggal tersebut.`
-              : 'Tidak ada laporan pada rentang tanggal tersebut.',
+              : sumberFilter
+                ? 'Tidak ada laporan dari Tim Survey pada rentang tanggal tersebut.'
+                : 'Tidak ada laporan pada rentang tanggal tersebut.',
         });
         setMemproses(false);
         return;
@@ -99,7 +116,14 @@ function PanelExport() {
       const namaJenisSlug = filterJenis
         ? `_${filterJenis.toLowerCase().replace(/\s+/g, '-')}`
         : '';
-      const namaFileDasar = `riwayat-laporan-pupr-ntt_${namaDari}_${namaSampai}${namaJenisSlug}`;
+      const namaSumberSlug = sumberFilter ? '_tim-survey' : '';
+      const namaFileDasar = `riwayat-laporan-pupr-ntt_${namaDari}_${namaSampai}${namaJenisSlug}${namaSumberSlug}`;
+
+      const labelFilterUntukPesan = filterJenis
+        ? ` (${filterJenis})`
+        : sumberFilter
+          ? ' (Tim Survey)'
+          : '';
 
       if (format === 'excel') {
         const { buffer, gagalFoto } = await exportExcel(data, { onProgress });
@@ -109,7 +133,7 @@ function PanelExport() {
         unduhBlob(blob, `${namaFileDasar}.xlsx`);
         setStatus({
           jenis: 'sukses',
-          pesan: `Berhasil! ${data.length} laporan${filterJenis ? ` (${filterJenis})` : ''} diekspor ke Excel.${
+          pesan: `Berhasil! ${data.length} laporan${labelFilterUntukPesan} diekspor ke Excel.${
             gagalFoto ? ` (${gagalFoto} foto gagal dimuat & dilewati)` : ''
           }`,
         });
@@ -118,7 +142,7 @@ function PanelExport() {
         unduhBlob(blob, `${namaFileDasar}.pdf`);
         setStatus({
           jenis: 'sukses',
-          pesan: `Berhasil! ${data.length} laporan${filterJenis ? ` (${filterJenis})` : ''} diekspor ke PDF.${
+          pesan: `Berhasil! ${data.length} laporan${labelFilterUntukPesan} diekspor ke PDF.${
             gagalFoto ? ` (${gagalFoto} foto gagal dimuat & dilewati)` : ''
           }`,
         });
@@ -143,8 +167,11 @@ function PanelExport() {
         <div className="riwayat-stats">
           <button
             type="button"
-            className={`riwayat-stat-kartu${jenisInfrastruktur === OPSI_SEMUA_JENIS ? ' riwayat-stat-aktif' : ''}`}
-            onClick={() => setJenisInfrastruktur(OPSI_SEMUA_JENIS)}
+            className={`riwayat-stat-kartu${jenisInfrastruktur === OPSI_SEMUA_JENIS && !sumberFilter ? ' riwayat-stat-aktif' : ''}`}
+            onClick={() => {
+              setJenisInfrastruktur(OPSI_SEMUA_JENIS);
+              setSumberFilter(null);
+            }}
           >
             <span className="riwayat-stat-angka">{hitungan.total}</span>
             <span className="riwayat-stat-label">Semua Laporan</span>
@@ -153,13 +180,27 @@ function PanelExport() {
             <button
               type="button"
               key={jenis}
-              className={`riwayat-stat-kartu${jenisInfrastruktur === jenis ? ' riwayat-stat-aktif' : ''}`}
-              onClick={() => setJenisInfrastruktur(jenis)}
+              className={`riwayat-stat-kartu${jenisInfrastruktur === jenis && !sumberFilter ? ' riwayat-stat-aktif' : ''}`}
+              onClick={() => {
+                setJenisInfrastruktur(jenis);
+                setSumberFilter(null);
+              }}
             >
               <span className="riwayat-stat-angka">{hitungan.perJenis[jenis] ?? 0}</span>
               <span className="riwayat-stat-label">{jenis}</span>
             </button>
           ))}
+          <button
+            type="button"
+            className={`riwayat-stat-kartu${sumberFilter === SUMBER_TIM_SURVEY ? ' riwayat-stat-aktif' : ''}`}
+            onClick={() => {
+              setSumberFilter(SUMBER_TIM_SURVEY);
+              setJenisInfrastruktur(OPSI_SEMUA_JENIS);
+            }}
+          >
+            <span className="riwayat-stat-angka">{hitungan.timSurvey}</span>
+            <span className="riwayat-stat-label">Tim Survey</span>
+          </button>
         </div>
       )}
 
@@ -187,13 +228,26 @@ function PanelExport() {
 
       <label className="field field-jenis-export">
         <span className="field-label">Jenis infrastruktur</span>
-        <select value={jenisInfrastruktur} onChange={(e) => setJenisInfrastruktur(e.target.value)}>
+        <select
+          value={jenisInfrastruktur}
+          onChange={(e) => {
+            setJenisInfrastruktur(e.target.value);
+            setSumberFilter(null);
+          }}
+        >
           <option value={OPSI_SEMUA_JENIS}>{OPSI_SEMUA_JENIS}</option>
           {DAFTAR_JENIS_INFRASTRUKTUR.map((jenis) => (
             <option key={jenis} value={jenis}>{jenis}</option>
           ))}
         </select>
       </label>
+
+      {sumberFilter === SUMBER_TIM_SURVEY && (
+        <p className="field-hint">
+          Filter aktif: hanya laporan dari <strong>Tim Survey</strong>. Klik kartu "Semua Laporan" atau
+          pilih jenis infrastruktur untuk membatalkan filter ini.
+        </p>
+      )}
 
       <div className="pilihan-format">
         <button

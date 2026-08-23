@@ -20,6 +20,10 @@ export default function SurveyLocationTagger({ onLocationReady }) {
   const [koordinat, setKoordinat] = useState(null);
   const [sumberKoordinat, setSumberKoordinat] = useState('gps');
   const [tampilPeta, setTampilPeta] = useState(false);
+  const [tampilKetikManual, setTampilKetikManual] = useState(false);
+  const [latKetik, setLatKetik] = useState('');
+  const [lngKetik, setLngKetik] = useState('');
+  const [errorKetik, setErrorKetik] = useState('');
 
   const ambilLokasiGPS = useCallback(() => {
     if (!navigator.geolocation) {
@@ -53,6 +57,29 @@ export default function SurveyLocationTagger({ onLocationReady }) {
     setPesanError('');
   }, []);
 
+  const terapkanKoordinatKetik = useCallback((e) => {
+    e.preventDefault();
+    const lat = parseFloat(latKetik.replace(',', '.'));
+    const lng = parseFloat(lngKetik.replace(',', '.'));
+    if (Number.isNaN(lat) || Number.isNaN(lng)) {
+      setErrorKetik('Latitude dan longitude harus berupa angka.');
+      return;
+    }
+    if (lat < -90 || lat > 90) {
+      setErrorKetik('Latitude harus di antara -90 dan 90.');
+      return;
+    }
+    if (lng < -180 || lng > 180) {
+      setErrorKetik('Longitude harus di antara -180 dan 180.');
+      return;
+    }
+    setErrorKetik('');
+    setKoordinat({ lat, lng });
+    setSumberKoordinat('ketik');
+    setGpsStatus('ready');
+    setPesanError('');
+  }, [latKetik, lngKetik]);
+
   useEffect(() => {
     ambilLokasiGPS();
   }, [ambilLokasiGPS]);
@@ -81,6 +108,9 @@ export default function SurveyLocationTagger({ onLocationReady }) {
               {sumberKoordinat === 'manual' && (
                 <span className="koordinat-sumber">(dipilih manual di peta)</span>
               )}
+              {sumberKoordinat === 'ketik' && (
+                <span className="koordinat-sumber">(diketik manual)</span>
+              )}
             </>
           )}
           {gpsStatus === 'error' && (
@@ -103,8 +133,61 @@ export default function SurveyLocationTagger({ onLocationReady }) {
             <IconMapPin size={16} />
             {tampilPeta ? 'Tutup Peta' : 'Pilih di Peta'}
           </button>
+          <button
+            type="button"
+            className="btn-ghost-icon"
+            onClick={() => {
+              setTampilKetikManual((v) => !v);
+              if (koordinat) {
+                setLatKetik(String(koordinat.lat));
+                setLngKetik(String(koordinat.lng));
+              }
+            }}
+          >
+            <IconMapPin size={16} />
+            {tampilKetikManual ? 'Tutup Input Manual' : 'Ketik Koordinat'}
+          </button>
         </div>
       </div>
+
+      {tampilKetikManual && (
+        <form className="koordinat-ketik-blok" onSubmit={terapkanKoordinatKetik}>
+          <p className="field-hint">
+            <IconMapPin size={14} /> Ketik langsung koordinat latitude &amp; longitude, misalnya dari Google Maps.
+          </p>
+          <div className="field-grid">
+            <label className="field">
+              <span className="field-label">Latitude</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="-10.152532"
+                value={latKetik}
+                onChange={(e) => setLatKetik(e.target.value)}
+              />
+            </label>
+            <label className="field">
+              <span className="field-label">Longitude</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="123.671848"
+                value={lngKetik}
+                onChange={(e) => setLngKetik(e.target.value)}
+              />
+            </label>
+          </div>
+          {errorKetik && (
+            <p className="pesan-proses pesan-status-error">
+              <IconAlert size={16} /> {errorKetik}
+            </p>
+          )}
+          <button type="submit" className="btn-ghost-icon">
+            <IconCheck size={16} />
+            Gunakan Koordinat Ini
+          </button>
+        </form>
+      )}
 
       {tampilPeta && (
         <div className="peta-pemilih-blok">

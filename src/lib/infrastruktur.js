@@ -143,3 +143,33 @@ export const DAFTAR_RUAS_JALAN = [
 export function ruasUntukKabupaten(kabupaten) {
   return DAFTAR_RUAS_JALAN.find((k) => k.kabupaten === kabupaten)?.ruas || [];
 }
+
+// Daftar Daerah Irigasi (D.I.) yang terdampak bencana, per kabupaten —
+// sumber: dokumen "D.I TERDAMPAK BENCANA". Ditampilkan sebagai dropdown
+// tambahan begitu jenis infrastruktur "Sumber Daya Air" dipilih.
+export const OPSI_LAINNYA_DI = 'D.I. lain (ketik manual)';
+
+export const DAFTAR_DAERAH_IRIGASI = [
+  { kabupaten: 'Sikka', daftar: ['D.I. Kolesia'] },
+  { kabupaten: 'Nagekeo', daftar: ['D.I. Malawitu'] },
+  {
+    kabupaten: 'Ngada',
+    daftar: ['D.I. Ganggong', 'D.I. Luwurweton', 'D.I. Malatawa', 'D.I. Nuakua'],
+  },
+  {
+    kabupaten: 'Manggarai Timur',
+    daftar: ['D.I. Wae Mokel I,II', 'D.I. Waerana'],
+  },
+  {
+    kabupaten: 'Manggarai',
+    daftar: ['D.I. Cancar', 'D.I. Golowoi', 'D.I. Satar Lenda', 'D.I. Wae Ces 1-4'],
+  },
+  {
+    kabupaten: 'Manggarai Barat',
+    daftar: ['D.I. Wae Ganggang', 'D.I. Wae Paku', 'D.I. Wae Tiwo Lawo', 'D.I. Wae Racang'],
+  },
+];
+
+// Tingkat/jenis kerusakan — dipakai untuk kategori Cipta Karya setelah
+// sub jenis infrastrukturnya dipilih.
+export const DAFTAR_TINGKAT_KERUSAKAN = ['Rusak Ringan', 'Rusak Sedang', 'Rusak Berat'];

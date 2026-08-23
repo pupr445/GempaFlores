@@ -21,6 +21,9 @@ import {
   DAFTAR_RUAS_JALAN,
   OPSI_LAINNYA_RUAS,
   ruasUntukKabupaten,
+  DAFTAR_DAERAH_IRIGASI,
+  OPSI_LAINNYA_DI,
+  DAFTAR_TINGKAT_KERUSAKAN,
 } from '../../lib/infrastruktur';
 
 let idCounter = 0;
@@ -33,6 +36,9 @@ export default function HalamanLaporan() {
   const [kabupatenRuas, setKabupatenRuas] = useState('');
   const [ruasJalan, setRuasJalan] = useState('');
   const [ruasJalanManual, setRuasJalanManual] = useState('');
+  const [daerahIrigasi, setDaerahIrigasi] = useState('');
+  const [daerahIrigasiManual, setDaerahIrigasiManual] = useState('');
+  const [tingkatKerusakan, setTingkatKerusakan] = useState('');
   const [namaPelapor, setNamaPelapor] = useState('');
   const [noHp, setNoHp] = useState('');
   const [deskripsi, setDeskripsi] = useState('');
@@ -51,14 +57,20 @@ export default function HalamanLaporan() {
   const daftarRuasKabupaten = kabupatenRuas ? ruasUntukKabupaten(kabupatenRuas) : [];
   const ruasJalanTerpilih =
     ruasJalan === OPSI_LAINNYA_RUAS ? ruasJalanManual.trim() : ruasJalan;
+  const daerahIrigasiTerpilih =
+    daerahIrigasi === OPSI_LAINNYA_DI ? daerahIrigasiManual.trim() : daerahIrigasi;
 
   const perluSubJenis = daftarSubJenisAktif.length > 0;
   const perluRuasJalan = jenisInfrastruktur === 'Jalan dan Jembatan' && subJenis === 'Jalan';
+  const perluDaerahIrigasi = jenisInfrastruktur === 'Sumber Daya Air';
+  const perluTingkatKerusakan = jenisInfrastruktur === 'Cipta Karya' && subJenis !== '';
 
   const jenisInfrastrukturLengkap =
     jenisInfrastruktur !== '' &&
     (!perluSubJenis || subJenis !== '') &&
-    (!perluRuasJalan || ruasJalanTerpilih !== '');
+    (!perluRuasJalan || ruasJalanTerpilih !== '') &&
+    (!perluDaerahIrigasi || daerahIrigasiTerpilih !== '') &&
+    (!perluTingkatKerusakan || tingkatKerusakan !== '');
 
   // Video opsional, jadi tidak termasuk di sini — hanya syarat wajib.
   const wajibLengkap =
@@ -154,6 +166,14 @@ export default function HalamanLaporan() {
       setStatus({ jenis: 'error', pesan: 'Pilih atau ketik nama ruas jalan.' });
       return;
     }
+    if (perluDaerahIrigasi && !daerahIrigasiTerpilih) {
+      setStatus({ jenis: 'error', pesan: 'Pilih atau ketik nama Daerah Irigasi (D.I.).' });
+      return;
+    }
+    if (perluTingkatKerusakan && !tingkatKerusakan) {
+      setStatus({ jenis: 'error', pesan: 'Pilih tingkat kerusakan.' });
+      return;
+    }
     if (photos.length === 0) {
       setStatus({ jenis: 'error', pesan: 'Tambahkan minimal satu foto sebelum mengirim.' });
       return;
@@ -175,6 +195,8 @@ export default function HalamanLaporan() {
         jenis_infrastruktur: jenisInfrastruktur,
         sub_jenis_infrastruktur: perluSubJenis ? subJenis : null,
         nama_ruas_jalan: perluRuasJalan ? ruasJalanTerpilih : null,
+        daerah_irigasi: perluDaerahIrigasi ? daerahIrigasiTerpilih : null,
+        tingkat_kerusakan: perluTingkatKerusakan ? tingkatKerusakan : null,
         kabupaten_kota: lokasi.kabupatenKota,
         kecamatan: lokasi.kecamatan,
         desa_kelurahan: lokasi.desaKelurahan,
@@ -196,6 +218,9 @@ export default function HalamanLaporan() {
       setKabupatenRuas('');
       setRuasJalan('');
       setRuasJalanManual('');
+      setDaerahIrigasi('');
+      setDaerahIrigasiManual('');
+      setTingkatKerusakan('');
       setNamaPelapor('');
       setNoHp('');
       setDeskripsi('');
@@ -273,6 +298,9 @@ export default function HalamanLaporan() {
                   setKabupatenRuas('');
                   setRuasJalan('');
                   setRuasJalanManual('');
+                  setDaerahIrigasi('');
+                  setDaerahIrigasiManual('');
+                  setTingkatKerusakan('');
                 }}
                 required
               >
@@ -293,12 +321,59 @@ export default function HalamanLaporan() {
                     setKabupatenRuas('');
                     setRuasJalan('');
                     setRuasJalanManual('');
+                    setTingkatKerusakan('');
                   }}
                   required
                 >
                   <option value="">Pilih sub jenis…</option>
                   {daftarSubJenisAktif.map((s) => (
                     <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {perluDaerahIrigasi && (
+              <label className="field field-full">
+                <span className="field-label">Daerah Irigasi (D.I.) <span className="field-wajib">*</span></span>
+                <select
+                  value={daerahIrigasi}
+                  onChange={(e) => setDaerahIrigasi(e.target.value)}
+                  required
+                >
+                  <option value="">Pilih Daerah Irigasi…</option>
+                  {DAFTAR_DAERAH_IRIGASI.map((k) => (
+                    <optgroup key={k.kabupaten} label={`Kabupaten ${k.kabupaten}`}>
+                      {k.daftar.map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                  <option value={OPSI_LAINNYA_DI}>{OPSI_LAINNYA_DI}</option>
+                </select>
+                {daerahIrigasi === OPSI_LAINNYA_DI && (
+                  <input
+                    type="text"
+                    className="field-manual"
+                    placeholder="Ketik nama Daerah Irigasi (D.I.)"
+                    value={daerahIrigasiManual}
+                    onChange={(e) => setDaerahIrigasiManual(e.target.value)}
+                  />
+                )}
+              </label>
+            )}
+
+            {perluTingkatKerusakan && (
+              <label className="field field-full">
+                <span className="field-label">Tingkat Kerusakan <span className="field-wajib">*</span></span>
+                <select
+                  value={tingkatKerusakan}
+                  onChange={(e) => setTingkatKerusakan(e.target.value)}
+                  required
+                >
+                  <option value="">Pilih tingkat kerusakan…</option>
+                  {DAFTAR_TINGKAT_KERUSAKAN.map((t) => (
+                    <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
               </label>

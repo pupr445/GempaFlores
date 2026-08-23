@@ -319,6 +319,15 @@ textarea {
   gap: 8px;
 }
 
+.koordinat-ketik-blok {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--laut-tint);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
 .peta-pemilih-wrapper {
   position: relative;
   border-radius: var(--radius-md);

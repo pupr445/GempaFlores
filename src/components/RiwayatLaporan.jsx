@@ -249,6 +249,8 @@ export default function RiwayatLaporan({
                 {laporan.jenis_infrastruktur}
                 {laporan.sub_jenis_infrastruktur && ` · ${laporan.sub_jenis_infrastruktur}`}
                 {laporan.nama_ruas_jalan && ` · ${laporan.nama_ruas_jalan}`}
+                {laporan.daerah_irigasi && ` · ${laporan.daerah_irigasi}`}
+                {laporan.tingkat_kerusakan && ` · ${laporan.tingkat_kerusakan}`}
               </p>
             )}
 

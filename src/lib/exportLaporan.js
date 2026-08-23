@@ -75,6 +75,7 @@ export async function exportExcel(laporanList, { onProgress } = {}) {
   sheet.columns = [
     { header: 'No', key: 'no', width: 5 },
     { header: 'Waktu', key: 'waktu', width: 19 },
+    { header: 'Sumber', key: 'sumber', width: 12 },
     { header: 'Pelapor', key: 'pelapor', width: 20 },
     { header: 'No. HP/WA', key: 'hp', width: 16 },
     { header: 'Kabupaten/Kota', key: 'kab', width: 18 },
@@ -95,7 +96,7 @@ export async function exportExcel(laporanList, { onProgress } = {}) {
   });
 
   let gagalFoto = 0;
-  const KOLOM_FOTO_INDEX = 9; // 0-based: no,waktu,pelapor,hp,kab,kec,desa,koordinat,deskripsi,foto(9)
+  const KOLOM_FOTO_INDEX = 10; // 0-based: no,waktu,sumber,pelapor,hp,kab,kec,desa,koordinat,deskripsi,foto(10)
 
   for (let i = 0; i < laporanList.length; i++) {
     const lp = laporanList[i];
@@ -104,6 +105,7 @@ export async function exportExcel(laporanList, { onProgress } = {}) {
 
     row.getCell('no').value = i + 1;
     row.getCell('waktu').value = formatWaktu(lp.created_at);
+    row.getCell('sumber').value = lp.sumber === 'tim_survey' ? 'Tim Survey' : 'Publik';
     row.getCell('pelapor').value = lp.nama_pelapor || '';
     row.getCell('hp').value = lp.no_hp || '';
     row.getCell('kab').value = lp.kabupaten_kota || '';

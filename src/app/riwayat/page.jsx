@@ -185,12 +185,17 @@ export default function HalamanRiwayat() {
                     dateStyle: 'medium',
                     timeStyle: 'short',
                   })}
+                  {laporan.sumber === 'tim_survey' && (
+                    <span className="badge-tim-survey">Tim Survey</span>
+                  )}
                 </p>
-                <p className="kartu-laporan-lokasi">
-                  {laporan.desa_kelurahan}, {laporan.kecamatan}
-                  <br />
-                  {laporan.kabupaten_kota}
-                </p>
+                {laporan.kabupaten_kota && (
+                  <p className="kartu-laporan-lokasi">
+                    {laporan.desa_kelurahan}, {laporan.kecamatan}
+                    <br />
+                    {laporan.kabupaten_kota}
+                  </p>
+                )}
                 <p className="kartu-laporan-koordinat">
                   {laporan.latitude?.toFixed(6)}, {laporan.longitude?.toFixed(6)}
                 </p>

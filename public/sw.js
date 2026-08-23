@@ -8,13 +8,15 @@
 //   di-cache sama sekali — dibiarkan lewat apa adanya. Kalau gagal karena
 //   offline, itu ditangani oleh kode aplikasi (disimpan ke antrian).
 
-const CACHE_VERSION = 'gempaflores-v1';
+const CACHE_VERSION = 'gempaflores-v2';
 const BASE = '/GempaFlores';
 
 const APP_SHELL = [
   `${BASE}/`,
   `${BASE}/lapor`,
   `${BASE}/riwayat`,
+  `${BASE}/survey`,
+  `${BASE}/survey/login`,
   `${BASE}/manifest.json`,
   `${BASE}/icon-192.png`,
   `${BASE}/icon-512.png`,

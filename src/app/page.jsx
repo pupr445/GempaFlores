@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Seismogram from '../components/Seismogram';
 import { asetPublik } from '../lib/basePath';
-import { IconUsers, IconLock } from '../components/icons';
+import { IconUsers, IconLock, IconClipboard } from '../components/icons';
 
 export default function HalamanBeranda() {
   return (
@@ -42,6 +42,17 @@ export default function HalamanBeranda() {
           <div className="kartu-pilihan-teks">
             <h2>Masyarakat / Pelapor</h2>
             <p>Buat laporan dampak gempa atau lihat riwayat laporan. Tidak perlu login.</p>
+          </div>
+          <span className="kartu-pilihan-panah" aria-hidden="true">→</span>
+        </Link>
+
+        <Link href="/survey" className="kartu-pilihan kartu-pilihan-survey">
+          <div className="kartu-pilihan-ikon">
+            <IconClipboard size={24} />
+          </div>
+          <div className="kartu-pilihan-teks">
+            <h2>Tim Survey</h2>
+            <p>Laporan cepat khusus tim survey lapangan. Perlu kode akses.</p>
           </div>
           <span className="kartu-pilihan-panah" aria-hidden="true">→</span>
         </Link>

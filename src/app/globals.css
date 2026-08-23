@@ -673,6 +673,18 @@ textarea {
   color: var(--danger);
 }
 
+.badge-tim-survey {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--moss-tint);
+  color: var(--moss);
+  font-size: 0.72rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
 /* ---------- Status offline / antrian ---------- */
 
 .status-offline-banner {
@@ -968,6 +980,11 @@ textarea {
 .kartu-pilihan-admin .kartu-pilihan-ikon {
   background: var(--ember-tint);
   color: var(--ember-deep);
+}
+
+.kartu-pilihan-survey .kartu-pilihan-ikon {
+  background: var(--moss-tint);
+  color: var(--moss);
 }
 
 .kartu-pilihan-teks {

@@ -251,6 +251,18 @@ export default function RiwayatLaporan({
                 {laporan.nama_ruas_jalan && ` · ${laporan.nama_ruas_jalan}`}
                 {laporan.daerah_irigasi && ` · ${laporan.daerah_irigasi}`}
                 {laporan.tingkat_kerusakan && ` · ${laporan.tingkat_kerusakan}`}
+                {laporan.kondisi_rumah && ` · ${laporan.kondisi_rumah}`}
+              </p>
+            )}
+
+            {laporan.nama_kepala_keluarga && (
+              <p className="kartu-laporan-data-rumah">
+                KK: {laporan.nama_kepala_keluarga}
+                {laporan.jumlah_kk != null && ` · ${laporan.jumlah_kk} KK`}
+                {laporan.jumlah_penghuni != null && ` · ${laporan.jumlah_penghuni} penghuni`}
+                {laporan.status_rumah && ` · ${laporan.status_rumah}`}
+                {laporan.kelompok_rentan && ` · Rentan: ${laporan.kelompok_rentan}`}
+                {laporan.kondisi_sanitasi && ` · Sanitasi: ${laporan.kondisi_sanitasi}`}
               </p>
             )}
 

@@ -176,3 +176,27 @@ export const DAFTAR_DAERAH_IRIGASI = [
 // Tingkat/jenis kerusakan — dipakai untuk kategori Cipta Karya setelah
 // sub jenis infrastrukturnya dipilih.
 export const DAFTAR_TINGKAT_KERUSAKAN = ['Rusak Ringan', 'Rusak Sedang', 'Rusak Berat'];
+
+// Data Rumah/Pemilik — muncul begitu jenis infrastruktur "Perumahan dan
+// Permukiman" dipilih dan sub jenisnya "Rumah/Perumahan".
+export const SUB_JENIS_RUMAH = 'Rumah/Perumahan';
+
+export const DAFTAR_KELOMPOK_RENTAN = ['Balita', 'Lansia', 'Ibu Hamil', 'Disabilitas'];
+
+export const DAFTAR_STATUS_RUMAH = [
+  'Milik Sendiri',
+  'Sewa/Kontrak',
+  'Menumpang',
+  'Rumah Dinas',
+  'Lainnya',
+];
+
+export const DAFTAR_KONDISI_RUMAH = ['Rusak Aman', 'Rusak Ringan', 'Rusak Sedang', 'Rusak Berat'];
+
+export const DAFTAR_KONDISI_SANITASI = [
+  'Baik',
+  'Rusak Ringan',
+  'Rusak Sedang',
+  'Rusak Berat',
+  'Tidak Ada Sanitasi',
+];

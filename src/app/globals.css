@@ -265,6 +265,58 @@ textarea {
   color: var(--ink-soft);
 }
 
+.field-hint-foto {
+  margin: 0 0 10px;
+  font-style: italic;
+}
+
+/* ---------- Blok Data Rumah (Perumahan dan Permukiman) ---------- */
+
+.blok-data-rumah {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--laut-tint);
+  border-radius: var(--radius-md);
+  padding: 14px 14px 6px;
+}
+
+.blok-data-rumah-judul {
+  margin: 4px 0 2px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--laut-deep);
+}
+
+.blok-data-rumah .field-grid {
+  margin-bottom: 8px;
+}
+
+.grup-checkbox {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.checkbox-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.82rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-pill input {
+  margin: 0;
+  accent-color: var(--laut-deep);
+}
+
 /* ---------- Lokasi / GPS ---------- */
 
 .location-tagger {
@@ -810,6 +862,12 @@ textarea {
   background: var(--laut-tint);
   border-radius: 999px;
   padding: 4px 10px;
+  margin: 0 0 8px;
+}
+
+.kartu-laporan-data-rumah {
+  font-size: 0.76rem;
+  color: var(--ink-soft);
   margin: 0 0 8px;
 }
 

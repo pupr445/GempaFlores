@@ -25,6 +25,11 @@ import {
   OPSI_LAINNYA_DI,
   SUB_JENIS_DAERAH_IRIGASI,
   DAFTAR_TINGKAT_KERUSAKAN,
+  SUB_JENIS_RUMAH,
+  DAFTAR_KELOMPOK_RENTAN,
+  DAFTAR_STATUS_RUMAH,
+  DAFTAR_KONDISI_RUMAH,
+  DAFTAR_KONDISI_SANITASI,
 } from '../../lib/infrastruktur';
 
 let idCounter = 0;
@@ -40,6 +45,13 @@ export default function HalamanLaporan() {
   const [daerahIrigasi, setDaerahIrigasi] = useState('');
   const [daerahIrigasiManual, setDaerahIrigasiManual] = useState('');
   const [tingkatKerusakan, setTingkatKerusakan] = useState('');
+  const [namaKepalaKeluarga, setNamaKepalaKeluarga] = useState('');
+  const [jumlahKK, setJumlahKK] = useState('');
+  const [kelompokRentan, setKelompokRentan] = useState([]); // string[]
+  const [jumlahPenghuni, setJumlahPenghuni] = useState('');
+  const [statusRumah, setStatusRumah] = useState('');
+  const [kondisiRumah, setKondisiRumah] = useState('');
+  const [kondisiSanitasi, setKondisiSanitasi] = useState('');
   const [namaPelapor, setNamaPelapor] = useState('');
   const [noHp, setNoHp] = useState('');
   const [deskripsi, setDeskripsi] = useState('');
@@ -66,13 +78,21 @@ export default function HalamanLaporan() {
   const perluDaerahIrigasi =
     jenisInfrastruktur === 'Sumber Daya Air' && subJenis === SUB_JENIS_DAERAH_IRIGASI;
   const perluTingkatKerusakan = jenisInfrastruktur === 'Cipta Karya' && subJenis !== '';
+  const perluDataRumah =
+    jenisInfrastruktur === 'Perumahan dan Permukiman' && subJenis === SUB_JENIS_RUMAH;
 
   const jenisInfrastrukturLengkap =
     jenisInfrastruktur !== '' &&
     (!perluSubJenis || subJenis !== '') &&
     (!perluRuasJalan || ruasJalanTerpilih !== '') &&
     (!perluDaerahIrigasi || daerahIrigasiTerpilih !== '') &&
-    (!perluTingkatKerusakan || tingkatKerusakan !== '');
+    (!perluTingkatKerusakan || tingkatKerusakan !== '') &&
+    (!perluDataRumah ||
+      (namaKepalaKeluarga.trim() !== '' &&
+        jumlahKK !== '' &&
+        jumlahPenghuni !== '' &&
+        statusRumah !== '' &&
+        kondisiRumah !== ''));
 
   // Video opsional, jadi tidak termasuk di sini — hanya syarat wajib.
   const wajibLengkap =
@@ -146,6 +166,22 @@ export default function HalamanLaporan() {
     });
   };
 
+  const toggleKelompokRentan = (opsi) => {
+    setKelompokRentan((prev) =>
+      prev.includes(opsi) ? prev.filter((k) => k !== opsi) : [...prev, opsi]
+    );
+  };
+
+  const resetDataRumah = () => {
+    setNamaKepalaKeluarga('');
+    setJumlahKK('');
+    setKelompokRentan([]);
+    setJumlahPenghuni('');
+    setStatusRumah('');
+    setKondisiRumah('');
+    setKondisiSanitasi('');
+  };
+
   const kirimLaporan = async (e) => {
     e.preventDefault();
     if (!namaPelapor.trim() || !noHp.trim()) {
@@ -176,6 +212,28 @@ export default function HalamanLaporan() {
       setStatus({ jenis: 'error', pesan: 'Pilih tingkat kerusakan.' });
       return;
     }
+    if (perluDataRumah) {
+      if (!namaKepalaKeluarga.trim()) {
+        setStatus({ jenis: 'error', pesan: 'Isi nama kepala keluarga.' });
+        return;
+      }
+      if (jumlahKK === '') {
+        setStatus({ jenis: 'error', pesan: 'Isi jumlah KK.' });
+        return;
+      }
+      if (jumlahPenghuni === '') {
+        setStatus({ jenis: 'error', pesan: 'Isi jumlah penghuni.' });
+        return;
+      }
+      if (!statusRumah) {
+        setStatus({ jenis: 'error', pesan: 'Pilih status rumah.' });
+        return;
+      }
+      if (!kondisiRumah) {
+        setStatus({ jenis: 'error', pesan: 'Pilih kondisi rumah (rusak aman/ringan/sedang/berat).' });
+        return;
+      }
+    }
     if (photos.length === 0) {
       setStatus({ jenis: 'error', pesan: 'Tambahkan minimal satu foto sebelum mengirim.' });
       return;
@@ -199,6 +257,13 @@ export default function HalamanLaporan() {
         nama_ruas_jalan: perluRuasJalan ? ruasJalanTerpilih : null,
         daerah_irigasi: perluDaerahIrigasi ? daerahIrigasiTerpilih : null,
         tingkat_kerusakan: perluTingkatKerusakan ? tingkatKerusakan : null,
+        nama_kepala_keluarga: perluDataRumah ? namaKepalaKeluarga.trim() : null,
+        jumlah_kk: perluDataRumah && jumlahKK !== '' ? Number(jumlahKK) : null,
+        kelompok_rentan: perluDataRumah && kelompokRentan.length > 0 ? kelompokRentan.join(', ') : null,
+        jumlah_penghuni: perluDataRumah && jumlahPenghuni !== '' ? Number(jumlahPenghuni) : null,
+        status_rumah: perluDataRumah ? statusRumah : null,
+        kondisi_rumah: perluDataRumah ? kondisiRumah : null,
+        kondisi_sanitasi: perluDataRumah ? kondisiSanitasi || null : null,
         kabupaten_kota: lokasi.kabupatenKota,
         kecamatan: lokasi.kecamatan,
         desa_kelurahan: lokasi.desaKelurahan,
@@ -223,6 +288,13 @@ export default function HalamanLaporan() {
       setDaerahIrigasi('');
       setDaerahIrigasiManual('');
       setTingkatKerusakan('');
+      setNamaKepalaKeluarga('');
+      setJumlahKK('');
+      setKelompokRentan([]);
+      setJumlahPenghuni('');
+      setStatusRumah('');
+      setKondisiRumah('');
+      setKondisiSanitasi('');
       setNamaPelapor('');
       setNoHp('');
       setDeskripsi('');
@@ -303,6 +375,7 @@ export default function HalamanLaporan() {
                   setDaerahIrigasi('');
                   setDaerahIrigasiManual('');
                   setTingkatKerusakan('');
+                  resetDataRumah();
                 }}
                 required
               >
@@ -326,6 +399,7 @@ export default function HalamanLaporan() {
                     setDaerahIrigasi('');
                     setDaerahIrigasiManual('');
                     setTingkatKerusakan('');
+                    resetDataRumah();
                   }}
                   required
                 >
@@ -381,6 +455,108 @@ export default function HalamanLaporan() {
                   ))}
                 </select>
               </label>
+            )}
+
+            {perluDataRumah && (
+              <div className="field field-full blok-data-rumah">
+                <p className="blok-data-rumah-judul">Pemilik</p>
+                <div className="field-grid">
+                  <label className="field">
+                    <span className="field-label">Nama Kepala Keluarga <span className="field-wajib">*</span></span>
+                    <input
+                      type="text"
+                      placeholder="Nama kepala keluarga"
+                      value={namaKepalaKeluarga}
+                      onChange={(e) => setNamaKepalaKeluarga(e.target.value)}
+                      required
+                    />
+                  </label>
+                  <label className="field">
+                    <span className="field-label">Jumlah KK <span className="field-wajib">*</span></span>
+                    <input
+                      type="number"
+                      min="0"
+                      inputMode="numeric"
+                      placeholder="mis. 1"
+                      value={jumlahKK}
+                      onChange={(e) => setJumlahKK(e.target.value)}
+                      required
+                    />
+                  </label>
+                  <label className="field field-full">
+                    <span className="field-label">Kelompok Rentan</span>
+                    <div className="grup-checkbox">
+                      {DAFTAR_KELOMPOK_RENTAN.map((opsi) => (
+                        <label key={opsi} className="checkbox-pill">
+                          <input
+                            type="checkbox"
+                            checked={kelompokRentan.includes(opsi)}
+                            onChange={() => toggleKelompokRentan(opsi)}
+                          />
+                          <span>{opsi}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </label>
+                  <label className="field">
+                    <span className="field-label">Jumlah Penghuni <span className="field-wajib">*</span></span>
+                    <input
+                      type="number"
+                      min="0"
+                      inputMode="numeric"
+                      placeholder="mis. 4"
+                      value={jumlahPenghuni}
+                      onChange={(e) => setJumlahPenghuni(e.target.value)}
+                      required
+                    />
+                  </label>
+                  <label className="field">
+                    <span className="field-label">Status Rumah <span className="field-wajib">*</span></span>
+                    <select
+                      value={statusRumah}
+                      onChange={(e) => setStatusRumah(e.target.value)}
+                      required
+                    >
+                      <option value="">Pilih status rumah…</option>
+                      {DAFTAR_STATUS_RUMAH.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <p className="blok-data-rumah-judul">Kondisi Rumah</p>
+                <div className="field-grid">
+                  <label className="field">
+                    <span className="field-label">
+                      Rusak Aman / Rusak Ringan / Rusak Sedang / Rusak Berat{' '}
+                      <span className="field-wajib">*</span>
+                    </span>
+                    <select
+                      value={kondisiRumah}
+                      onChange={(e) => setKondisiRumah(e.target.value)}
+                      required
+                    >
+                      <option value="">Pilih kondisi rumah…</option>
+                      {DAFTAR_KONDISI_RUMAH.map((k) => (
+                        <option key={k} value={k}>{k}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="field">
+                    <span className="field-label">Kondisi Sanitasi</span>
+                    <select
+                      value={kondisiSanitasi}
+                      onChange={(e) => setKondisiSanitasi(e.target.value)}
+                    >
+                      <option value="">Pilih kondisi sanitasi…</option>
+                      {DAFTAR_KONDISI_SANITASI.map((k) => (
+                        <option key={k} value={k}>{k}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              </div>
             )}
 
             {perluRuasJalan && (
@@ -474,6 +650,11 @@ export default function HalamanLaporan() {
 
         <section>
           <p className="section-eyebrow">05 &middot; Foto</p>
+          {jenisInfrastruktur === 'Perumahan dan Permukiman' && (
+            <p className="field-hint field-hint-foto">
+              Ambil foto rumah tampak depan, kanan, kiri, dan belakang.
+            </p>
+          )}
           <div className="tombol-foto">
             <CameraCapture onCapture={prosesFotoBaru} disabled={memproses || !lokasi} />
             <FileUpload onUpload={prosesFotoBaru} disabled={memproses || !lokasi} />

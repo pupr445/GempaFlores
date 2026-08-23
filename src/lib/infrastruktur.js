@@ -177,6 +177,22 @@ export const DAFTAR_DAERAH_IRIGASI = [
 // sub jenis infrastrukturnya dipilih.
 export const DAFTAR_TINGKAT_KERUSAKAN = ['Rusak Ringan', 'Rusak Sedang', 'Rusak Berat'];
 
+// Kategori Bangunan Gedung — muncul begitu jenis infrastruktur "Cipta
+// Karya" dipilih dan sub jenisnya "Bangunan Gedung/Fasilitas Umum".
+export const SUB_JENIS_BANGUNAN_GEDUNG = 'Bangunan Gedung/Fasilitas Umum';
+
+export const DAFTAR_KATEGORI_BANGUNAN_GEDUNG = [
+  { kategori: 'Keagamaan', contoh: 'masjid, gereja, pura, dll' },
+  { kategori: 'Perkantoran', contoh: 'kantor termasuk juga rumah negara' },
+  { kategori: 'Perdagangan', contoh: 'warung, toko, pasar dan mal' },
+  { kategori: 'Perindustrian', contoh: 'pabrik, laboratorium dan perbengkelan' },
+  { kategori: 'Perhotelan', contoh: 'wisma, losmen, hostel, motel, rumah kos, dan hotel' },
+  { kategori: 'Terminal', contoh: 'terminal angkutan darat, bandara dan pelabuhan laut' },
+  { kategori: 'Pendidikan', contoh: 'SD/SMP/SMA/PT, dll' },
+  { kategori: 'Kebudayaan', contoh: 'museum, gedung pameran dan gedung kesenian' },
+  { kategori: 'Kesehatan', contoh: 'puskesmas, klinik, rumah sakit, tempat praktik dan laboratorium' },
+];
+
 // Data Rumah/Pemilik — muncul begitu jenis infrastruktur "Perumahan dan
 // Permukiman" dipilih dan sub jenisnya "Rumah/Perumahan".
 export const SUB_JENIS_RUMAH = 'Rumah/Perumahan';

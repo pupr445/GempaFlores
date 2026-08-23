@@ -30,6 +30,8 @@ import {
   DAFTAR_STATUS_RUMAH,
   DAFTAR_KONDISI_RUMAH,
   DAFTAR_KONDISI_SANITASI,
+  SUB_JENIS_BANGUNAN_GEDUNG,
+  DAFTAR_KATEGORI_BANGUNAN_GEDUNG,
 } from '../../lib/infrastruktur';
 
 let idCounter = 0;
@@ -52,6 +54,7 @@ export default function HalamanLaporan() {
   const [statusRumah, setStatusRumah] = useState('');
   const [kondisiRumah, setKondisiRumah] = useState('');
   const [kondisiSanitasi, setKondisiSanitasi] = useState('');
+  const [kategoriBangunanGedung, setKategoriBangunanGedung] = useState('');
   const [namaPelapor, setNamaPelapor] = useState('');
   const [noHp, setNoHp] = useState('');
   const [deskripsi, setDeskripsi] = useState('');
@@ -80,6 +83,8 @@ export default function HalamanLaporan() {
   const perluTingkatKerusakan = jenisInfrastruktur === 'Cipta Karya' && subJenis !== '';
   const perluDataRumah =
     jenisInfrastruktur === 'Perumahan dan Permukiman' && subJenis === SUB_JENIS_RUMAH;
+  const perluKategoriBangunanGedung =
+    jenisInfrastruktur === 'Cipta Karya' && subJenis === SUB_JENIS_BANGUNAN_GEDUNG;
 
   const jenisInfrastrukturLengkap =
     jenisInfrastruktur !== '' &&
@@ -87,6 +92,7 @@ export default function HalamanLaporan() {
     (!perluRuasJalan || ruasJalanTerpilih !== '') &&
     (!perluDaerahIrigasi || daerahIrigasiTerpilih !== '') &&
     (!perluTingkatKerusakan || tingkatKerusakan !== '') &&
+    (!perluKategoriBangunanGedung || kategoriBangunanGedung !== '') &&
     (!perluDataRumah ||
       (namaKepalaKeluarga.trim() !== '' &&
         jumlahKK !== '' &&
@@ -212,6 +218,10 @@ export default function HalamanLaporan() {
       setStatus({ jenis: 'error', pesan: 'Pilih tingkat kerusakan.' });
       return;
     }
+    if (perluKategoriBangunanGedung && !kategoriBangunanGedung) {
+      setStatus({ jenis: 'error', pesan: 'Pilih kategori bangunan gedung.' });
+      return;
+    }
     if (perluDataRumah) {
       if (!namaKepalaKeluarga.trim()) {
         setStatus({ jenis: 'error', pesan: 'Isi nama kepala keluarga.' });
@@ -257,6 +267,7 @@ export default function HalamanLaporan() {
         nama_ruas_jalan: perluRuasJalan ? ruasJalanTerpilih : null,
         daerah_irigasi: perluDaerahIrigasi ? daerahIrigasiTerpilih : null,
         tingkat_kerusakan: perluTingkatKerusakan ? tingkatKerusakan : null,
+        kategori_bangunan_gedung: perluKategoriBangunanGedung ? kategoriBangunanGedung : null,
         nama_kepala_keluarga: perluDataRumah ? namaKepalaKeluarga.trim() : null,
         jumlah_kk: perluDataRumah && jumlahKK !== '' ? Number(jumlahKK) : null,
         kelompok_rentan: perluDataRumah && kelompokRentan.length > 0 ? kelompokRentan.join(', ') : null,
@@ -288,6 +299,7 @@ export default function HalamanLaporan() {
       setDaerahIrigasi('');
       setDaerahIrigasiManual('');
       setTingkatKerusakan('');
+      setKategoriBangunanGedung('');
       setNamaKepalaKeluarga('');
       setJumlahKK('');
       setKelompokRentan([]);
@@ -375,6 +387,7 @@ export default function HalamanLaporan() {
                   setDaerahIrigasi('');
                   setDaerahIrigasiManual('');
                   setTingkatKerusakan('');
+                  setKategoriBangunanGedung('');
                   resetDataRumah();
                 }}
                 required
@@ -399,6 +412,7 @@ export default function HalamanLaporan() {
                     setDaerahIrigasi('');
                     setDaerahIrigasiManual('');
                     setTingkatKerusakan('');
+                    setKategoriBangunanGedung('');
                     resetDataRumah();
                   }}
                   required
@@ -437,6 +451,27 @@ export default function HalamanLaporan() {
                     value={daerahIrigasiManual}
                     onChange={(e) => setDaerahIrigasiManual(e.target.value)}
                   />
+                )}
+              </label>
+            )}
+
+            {perluKategoriBangunanGedung && (
+              <label className="field field-full">
+                <span className="field-label">Kategori Bangunan Gedung <span className="field-wajib">*</span></span>
+                <select
+                  value={kategoriBangunanGedung}
+                  onChange={(e) => setKategoriBangunanGedung(e.target.value)}
+                  required
+                >
+                  <option value="">Pilih kategori bangunan gedung…</option>
+                  {DAFTAR_KATEGORI_BANGUNAN_GEDUNG.map((k) => (
+                    <option key={k.kategori} value={k.kategori}>{k.kategori}</option>
+                  ))}
+                </select>
+                {kategoriBangunanGedung && (
+                  <p className="field-hint">
+                    Contoh: {DAFTAR_KATEGORI_BANGUNAN_GEDUNG.find((k) => k.kategori === kategoriBangunanGedung)?.contoh}
+                  </p>
                 )}
               </label>
             )}

@@ -251,6 +251,7 @@ export default function RiwayatLaporan({
                 {laporan.nama_ruas_jalan && ` · ${laporan.nama_ruas_jalan}`}
                 {laporan.daerah_irigasi && ` · ${laporan.daerah_irigasi}`}
                 {laporan.tingkat_kerusakan && ` · ${laporan.tingkat_kerusakan}`}
+                {laporan.kategori_bangunan_gedung && ` · ${laporan.kategori_bangunan_gedung}`}
                 {laporan.kondisi_rumah && ` · ${laporan.kondisi_rumah}`}
               </p>
             )}

@@ -27,8 +27,8 @@ export default function AppHeader({ subtitle }) {
           />
         </div>
 
-        <p className="app-eyebrow">GempaFlores</p>
-        <h1 className="app-title">Lapor Dampak Gempa</h1>
+          <p className="app-eyebrow">Lapor PUPR NTT</p>
+          <h1 className="app-title">Lapor Dampak Gempa</h1>
         <p className="app-subtitle">
           {subtitle || 'Laporan lapangan tercatat lokasi & waktu otomatis'}
         </p>

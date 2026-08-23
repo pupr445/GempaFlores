@@ -65,7 +65,7 @@ function formatWaktu(iso) {
 
 export async function exportExcel(laporanList, { onProgress } = {}) {
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'GempaFlores';
+  workbook.creator = 'Lapor PUPR NTT';
   workbook.created = new Date();
 
   const sheet = workbook.addWorksheet('Riwayat Laporan', {

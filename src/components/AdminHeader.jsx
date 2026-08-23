@@ -37,7 +37,7 @@ export default function AdminHeader({ subtitle, showLogout = true }) {
         <p className="app-eyebrow admin-eyebrow">
           <IconLock size={12} /> Area Admin
         </p>
-        <h1 className="app-title">GempaFlores</h1>
+        <h1 className="app-title">Lapor PUPR NTT</h1>
         <p className="app-subtitle">{subtitle}</p>
 
         <div className="admin-header-aksi">

@@ -27,7 +27,7 @@ export default function HalamanBeranda() {
             />
           </div>
 
-          <p className="app-eyebrow">GempaFlores</p>
+          <p className="app-eyebrow">Lapor PUPR NTT</p>
           <h1 className="app-title">Lapor Dampak Gempa</h1>
           <p className="app-subtitle">Pilih cara masuk sesuai kebutuhan Anda</p>
           <Seismogram />

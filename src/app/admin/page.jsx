@@ -98,7 +98,7 @@ function IsiDasbor() {
       const namaJenisSlug = filterJenis
         ? `_${filterJenis.toLowerCase().replace(/\s+/g, '-')}`
         : '';
-      const namaFileDasar = `riwayat-laporan-gempaflores_${namaDari}_${namaSampai}${namaJenisSlug}`;
+      const namaFileDasar = `riwayat-laporan-pupr-ntt_${namaDari}_${namaSampai}${namaJenisSlug}`;
 
       if (format === 'excel') {
         const { buffer, gagalFoto } = await exportExcel(data, { onProgress });

@@ -4,13 +4,13 @@ import PwaSetup from '../components/PwaSetup';
 const BASE_PATH = process.env.NODE_ENV === 'production' ? '/GempaFlores' : '';
 
 export const metadata = {
-  title: 'GempaFlores — Lapor Dampak Gempa',
+  title: 'Lapor PUPR NTT — Lapor Dampak Gempa',
   description: 'Form laporan dampak gempa di Flores, dengan foto ber-watermark lokasi & waktu. Bisa dipakai offline.',
   manifest: `${BASE_PATH}/manifest.json`,
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'GempaFlores',
+    title: 'Lapor PUPR NTT',
   },
   icons: {
     icon: `${BASE_PATH}/icon-192.png`,

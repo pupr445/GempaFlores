@@ -89,7 +89,15 @@ function PanelExport() {
 
     try {
       const filterJenis = jenisInfrastruktur === OPSI_SEMUA_JENIS ? null : jenisInfrastruktur;
-      const data = await ambilLaporanRentang(tanggalMulai || null, tanggalSelesai || null, filterJenis, sumberFilter);
+      const onProgressAmbil = (jumlah) =>
+        setStatus({ jenis: 'info', pesan: `Mengambil data laporan… (${jumlah} terambil sejauh ini)` });
+      const data = await ambilLaporanRentang(
+        tanggalMulai || null,
+        tanggalSelesai || null,
+        filterJenis,
+        sumberFilter,
+        onProgressAmbil
+      );
 
       if (data.length === 0) {
         setStatus({

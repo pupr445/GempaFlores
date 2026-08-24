@@ -16,21 +16,53 @@ import { supabase } from './supabaseClient';
  * jenisInfrastruktur boleh null/kosong untuk "semua jenis". sumber boleh
  * null/kosong untuk "semua sumber", atau diisi 'tim_survey' untuk hanya
  * laporan yang masuk dari mode Tim Survey.
+ *
+ * PENTING: Supabase/PostgREST membatasi maksimal 1000 baris per satu kali
+ * panggilan query (pengaturan default "max rows"), berapa pun jumlah data
+ * sebenarnya. Kalau tidak di-paginasi, laporan ke-1001 dst akan diam-diam
+ * terpotong tanpa error apa pun. Karena itu di sini query diulang per
+ * halaman 1000 baris (pakai .range()) sampai halaman terakhir habis,
+ * supaya SEMUA laporan pada rentang tanggal ikut terambil.
+ *
+ * onProgress(jumlahTerambilSejauhIni) opsional, dipanggil setiap satu
+ * halaman selesai diambil — dipakai untuk menampilkan progres di UI.
  */
-export async function ambilLaporanRentang(tanggalMulai, tanggalSelesai, jenisInfrastruktur, sumber) {
-  let query = supabase
-    .from('laporan')
-    .select('*, foto_laporan(id, url), video_laporan(id, url)')
-    .order('created_at', { ascending: true });
+export async function ambilLaporanRentang(
+  tanggalMulai,
+  tanggalSelesai,
+  jenisInfrastruktur,
+  sumber,
+  onProgress
+) {
+  const UKURAN_HALAMAN = 1000;
+  let semuaData = [];
+  let dari = 0;
 
-  if (tanggalMulai) query = query.gte('created_at', `${tanggalMulai}T00:00:00`);
-  if (tanggalSelesai) query = query.lte('created_at', `${tanggalSelesai}T23:59:59`);
-  if (jenisInfrastruktur) query = query.eq('jenis_infrastruktur', jenisInfrastruktur);
-  if (sumber) query = query.eq('sumber', sumber);
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    let query = supabase
+      .from('laporan')
+      .select('*, foto_laporan(id, url), video_laporan(id, url)')
+      .order('created_at', { ascending: true })
+      .range(dari, dari + UKURAN_HALAMAN - 1);
 
-  const { data, error } = await query;
-  if (error) throw error;
-  return data || [];
+    if (tanggalMulai) query = query.gte('created_at', `${tanggalMulai}T00:00:00`);
+    if (tanggalSelesai) query = query.lte('created_at', `${tanggalSelesai}T23:59:59`);
+    if (jenisInfrastruktur) query = query.eq('jenis_infrastruktur', jenisInfrastruktur);
+    if (sumber) query = query.eq('sumber', sumber);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const halaman = data || [];
+    semuaData = semuaData.concat(halaman);
+    if (onProgress) onProgress(semuaData.length);
+
+    if (halaman.length < UKURAN_HALAMAN) break; // halaman terakhir — berhenti
+    dari += UKURAN_HALAMAN;
+  }
+
+  return semuaData;
 }
 
 // Download foto dari URL-nya lalu perkecil lewat canvas. Karena bytes-nya

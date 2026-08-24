@@ -80,11 +80,14 @@ export default function HalamanLaporan() {
   const perluRuasJalan = jenisInfrastruktur === 'Jalan dan Jembatan' && subJenis === 'Jalan';
   const perluDaerahIrigasi =
     jenisInfrastruktur === 'Sumber Daya Air' && subJenis === SUB_JENIS_DAERAH_IRIGASI;
-  const perluTingkatKerusakan = jenisInfrastruktur === 'Cipta Karya' && subJenis !== '';
   const perluDataRumah =
     jenisInfrastruktur === 'Perumahan dan Permukiman' && subJenis === SUB_JENIS_RUMAH;
   const perluKategoriBangunanGedung =
     jenisInfrastruktur === 'Cipta Karya' && subJenis === SUB_JENIS_BANGUNAN_GEDUNG;
+  // Tingkat Kerusakan berlaku untuk semua jenis/sub jenis infrastruktur,
+  // KECUALI Rumah/Perumahan — yang sudah punya field kondisi kerusakannya
+  // sendiri ("Kondisi Rumah", termasuk opsi "Rusak Aman") di blok Data Rumah.
+  const perluTingkatKerusakan = perluSubJenis && subJenis !== '' && !perluDataRumah;
 
   const jenisInfrastrukturLengkap =
     jenisInfrastruktur !== '' &&
@@ -476,22 +479,6 @@ export default function HalamanLaporan() {
               </label>
             )}
 
-            {perluTingkatKerusakan && (
-              <label className="field field-full">
-                <span className="field-label">Tingkat Kerusakan <span className="field-wajib">*</span></span>
-                <select
-                  value={tingkatKerusakan}
-                  onChange={(e) => setTingkatKerusakan(e.target.value)}
-                  required
-                >
-                  <option value="">Pilih tingkat kerusakan…</option>
-                  {DAFTAR_TINGKAT_KERUSAKAN.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-              </label>
-            )}
-
             {perluDataRumah && (
               <div className="field field-full blok-data-rumah">
                 <p className="blok-data-rumah-judul">Pemilik</p>
@@ -639,6 +626,22 @@ export default function HalamanLaporan() {
                   )}
                 </label>
               </>
+            )}
+
+            {perluTingkatKerusakan && (
+              <label className="field field-full">
+                <span className="field-label">Tingkat Kerusakan <span className="field-wajib">*</span></span>
+                <select
+                  value={tingkatKerusakan}
+                  onChange={(e) => setTingkatKerusakan(e.target.value)}
+                  required
+                >
+                  <option value="">Pilih tingkat kerusakan…</option>
+                  {DAFTAR_TINGKAT_KERUSAKAN.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </label>
             )}
           </div>
         </section>

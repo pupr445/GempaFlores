@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import AdminGuard from '../../components/AdminGuard';
 import AdminHeader from '../../components/AdminHeader';
 import RiwayatLaporan from '../../components/RiwayatLaporan';
+import GrafikKerusakan, { LegendaKerusakan } from '../../components/GrafikKerusakan';
 import {
   IconDownload,
   IconFileSpreadsheet,
@@ -11,10 +13,24 @@ import {
   IconLoader,
   IconAlert,
   IconCheck,
+  IconMapPin,
 } from '../../components/icons';
 import { ambilLaporanRentang, exportExcel, exportPdf, unduhBlob } from '../../lib/exportLaporan';
 import { DAFTAR_JENIS_INFRASTRUKTUR } from '../../lib/infrastruktur';
 import { supabase } from '../../lib/supabaseClient';
+import {
+  ambilTitikStatistik,
+  hitungTotalKerusakan,
+  hitungPerKabupaten,
+  hitungPerKecamatan,
+} from '../../lib/statistikLaporan';
+
+// Dimuat hanya di browser (ssr: false) — Leaflet mengakses `window`, yang
+// tidak tersedia saat proses build statis (next build / output: export).
+const PetaSebaranLaporan = dynamic(() => import('../../components/PetaSebaranLaporan'), {
+  ssr: false,
+  loading: () => <p className="peta-loading">Memuat peta…</p>,
+});
 
 const OPSI_SEMUA_JENIS = 'Semua Jenis';
 const SUMBER_TIM_SURVEY = 'tim_survey';
@@ -310,6 +326,135 @@ function PanelRiwayat() {
   );
 }
 
+function PanelPeta() {
+  const [status, setStatus] = useState({ jenis: '', pesan: '' });
+  const [memuat, setMemuat] = useState(false);
+  const [titikList, setTitikList] = useState(null); // null = belum dimuat
+  const [filterJenis, setFilterJenis] = useState(OPSI_SEMUA_JENIS);
+  const [kabupatenTerpilih, setKabupatenTerpilih] = useState('');
+
+  const muatData = useCallback(async () => {
+    setMemuat(true);
+    setStatus({ jenis: 'info', pesan: 'Mengambil titik laporan…' });
+    try {
+      const jenis = filterJenis === OPSI_SEMUA_JENIS ? null : filterJenis;
+      const onProgress = (jumlah) =>
+        setStatus({ jenis: 'info', pesan: `Mengambil titik laporan… (${jumlah} terambil sejauh ini)` });
+      const data = await ambilTitikStatistik({ jenisInfrastruktur: jenis, onProgress });
+      setTitikList(data);
+      setKabupatenTerpilih('');
+      setStatus({
+        jenis: 'sukses',
+        pesan: `Berhasil memuat ${data.length.toLocaleString('id-ID')} titik laporan yang punya koordinat.`,
+      });
+    } catch (err) {
+      console.error(err);
+      setStatus({ jenis: 'error', pesan: 'Gagal mengambil data. Periksa koneksi lalu coba lagi.' });
+    } finally {
+      setMemuat(false);
+    }
+  }, [filterJenis]);
+
+  const totalKerusakan = useMemo(() => (titikList ? hitungTotalKerusakan(titikList) : null), [titikList]);
+
+  const ringkasanTotal = useMemo(() => {
+    if (!totalKerusakan) return [];
+    const total = Object.values(totalKerusakan).reduce((a, b) => a + b, 0);
+    return [{ label: 'Semua Laporan', ...totalKerusakan, total }];
+  }, [totalKerusakan]);
+
+  const perKabupaten = useMemo(() => {
+    if (!titikList) return [];
+    return hitungPerKabupaten(titikList).map((r) => ({ ...r, label: r.kabupaten }));
+  }, [titikList]);
+
+  const daftarKabupatenTersedia = useMemo(() => perKabupaten.map((r) => r.kabupaten), [perKabupaten]);
+
+  const perKecamatan = useMemo(() => {
+    if (!titikList || !kabupatenTerpilih) return [];
+    return hitungPerKecamatan(titikList, kabupatenTerpilih).map((r) => ({ ...r, label: r.kecamatan }));
+  }, [titikList, kabupatenTerpilih]);
+
+  return (
+    <section className="panel-peta">
+      <h2>Peta &amp; Statistik Kerusakan</h2>
+      <p className="panel-export-desc">
+        Sebaran lokasi laporan di peta, dan rekap tingkat kerusakan (Rusak Aman/Ringan/Sedang/Berat) —
+        total, per kabupaten, dan per kecamatan.
+      </p>
+
+      <div className="peta-filter-baris">
+        <label className="field">
+          <span className="field-label">Jenis infrastruktur</span>
+          <select value={filterJenis} onChange={(e) => setFilterJenis(e.target.value)} disabled={memuat}>
+            <option value={OPSI_SEMUA_JENIS}>{OPSI_SEMUA_JENIS}</option>
+            {DAFTAR_JENIS_INFRASTRUKTUR.map((jenis) => (
+              <option key={jenis} value={jenis}>{jenis}</option>
+            ))}
+          </select>
+        </label>
+        <button type="button" className="tombol-export" onClick={muatData} disabled={memuat}>
+          {memuat ? <IconLoader size={16} /> : <IconMapPin size={16} />}
+          {titikList ? 'Muat Ulang Data' : 'Muat Data'}
+        </button>
+      </div>
+
+      {status.pesan && (
+        <p className={`pesan-proses pesan-status-${status.jenis}`}>
+          {status.jenis === 'info' && <IconLoader size={16} />}
+          {status.jenis === 'error' && <IconAlert size={16} />}
+          {status.jenis === 'sukses' && <IconCheck size={16} />}
+          {status.pesan}
+        </p>
+      )}
+
+      {!titikList && !memuat && (
+        <p className="panel-export-desc">
+          Data belum dimuat — klik &ldquo;Muat Data&rdquo; di atas. Prosesnya mengambil semua laporan yang
+          punya koordinat (bisa puluhan ribu baris), jadi mungkin makan waktu beberapa detik.
+        </p>
+      )}
+
+      {titikList && (
+        <>
+          <LegendaKerusakan />
+
+          <div className="peta-wrap-admin">
+            <PetaSebaranLaporan titikList={titikList} />
+          </div>
+
+          <GrafikKerusakan judul="Ringkasan Tingkat Kerusakan (Semua Laporan)" rows={ringkasanTotal} />
+
+          <GrafikKerusakan
+            judul="Tingkat Kerusakan per Kabupaten/Kota"
+            rows={perKabupaten}
+            labelKosong="Belum ada laporan dengan kabupaten/kota terisi."
+          />
+
+          <div className="kartu-grafik-kerusakan">
+            <h3 className="kartu-grafik-kerusakan-judul">Tingkat Kerusakan per Kecamatan</h3>
+            <label className="field field-full">
+              <span className="field-label">Pilih kabupaten/kota</span>
+              <select value={kabupatenTerpilih} onChange={(e) => setKabupatenTerpilih(e.target.value)}>
+                <option value="">Pilih kabupaten/kota…</option>
+                {daftarKabupatenTersedia.map((kab) => (
+                  <option key={kab} value={kab}>{kab}</option>
+                ))}
+              </select>
+            </label>
+            {!kabupatenTerpilih && (
+              <p className="kartu-grafik-kerusakan-kosong">Pilih kabupaten/kota dulu untuk melihat rincian per kecamatan.</p>
+            )}
+            {kabupatenTerpilih && (
+              <GrafikKerusakan rows={perKecamatan} labelKosong={`Belum ada laporan dengan kecamatan terisi untuk ${kabupatenTerpilih}.`} judul="" />
+            )}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
 export default function HalamanAdmin() {
   const [tabAktif, setTabAktif] = useState('export');
 
@@ -317,7 +462,9 @@ export default function HalamanAdmin() {
     <AdminGuard>
       <AdminHeader subtitle="Dasbor Admin" tabAktif={tabAktif} onGantiTab={setTabAktif} />
       <main className="halaman-admin">
-        {tabAktif === 'export' ? <PanelExport /> : <PanelRiwayat />}
+        {tabAktif === 'export' && <PanelExport />}
+        {tabAktif === 'riwayat' && <PanelRiwayat />}
+        {tabAktif === 'peta' && <PanelPeta />}
       </main>
     </AdminGuard>
   );

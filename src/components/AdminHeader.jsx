@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabaseClient';
 import { asetPublik } from '../lib/basePath';
-import { IconLock, IconLogout, IconDownload, IconHistory } from './icons';
+import { IconLock, IconLogout, IconDownload, IconHistory, IconMapPin } from './icons';
 import DasborTabs from './DasborTabs';
 
 const TAB_ADMIN = [
   { key: 'export', label: 'Export', icon: <IconDownload size={16} /> },
   { key: 'riwayat', label: 'Riwayat Laporan', icon: <IconHistory size={16} /> },
+  { key: 'peta', label: 'Peta & Statistik', icon: <IconMapPin size={16} /> },
 ];
 
 export default function AdminHeader({ subtitle, showLogout = true, tabAktif, onGantiTab }) {

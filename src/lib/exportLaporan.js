@@ -62,6 +62,34 @@ function formatWaktu(iso) {
   return new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
 }
 
+// Kolom "Detail" — ruas jalan (Jalan dan Jembatan), D.I. (Sumber Daya
+// Air), atau kategori bangunan gedung (Cipta Karya) saling meniadakan,
+// jadi cukup satu kolom gabungan.
+function detailInfrastruktur(lp) {
+  return lp.nama_ruas_jalan || lp.daerah_irigasi || lp.kategori_bangunan_gedung || '';
+}
+
+// Kolom "Kondisi/Kerusakan" — tingkat kerusakan (Cipta Karya) atau
+// kondisi rumah (Perumahan dan Permukiman) saling meniadakan.
+function kondisiKerusakan(lp) {
+  return lp.tingkat_kerusakan || lp.kondisi_rumah || '';
+}
+
+// Ringkasan Data Rumah/Pemilik (hanya terisi untuk laporan Perumahan
+// dan Permukiman sub jenis Rumah/Perumahan) — digabung jadi satu blok
+// teks multi-baris supaya tidak perlu banyak kolom kosong untuk
+// laporan jenis lain.
+function dataRumahTeks(lp) {
+  const baris = [];
+  if (lp.nama_kepala_keluarga) baris.push(`KK: ${lp.nama_kepala_keluarga}`);
+  if (lp.jumlah_kk != null) baris.push(`Jumlah KK: ${lp.jumlah_kk}`);
+  if (lp.jumlah_penghuni != null) baris.push(`Jumlah Penghuni: ${lp.jumlah_penghuni}`);
+  if (lp.status_rumah) baris.push(`Status Rumah: ${lp.status_rumah}`);
+  if (lp.kelompok_rentan) baris.push(`Kelompok Rentan: ${lp.kelompok_rentan}`);
+  if (lp.kondisi_sanitasi) baris.push(`Sanitasi: ${lp.kondisi_sanitasi}`);
+  return baris.join('\n');
+}
+
 // ---------------------------------------------------------------------
 // EXCEL
 // ---------------------------------------------------------------------
@@ -85,6 +113,11 @@ export async function exportExcel(laporanList, { onProgress } = {}) {
     { header: 'Kecamatan', key: 'kec', width: 16 },
     { header: 'Desa/Kelurahan', key: 'desa', width: 18 },
     { header: 'Koordinat', key: 'koordinat', width: 22 },
+    { header: 'Jenis Infrastruktur', key: 'jenisInfra', width: 20 },
+    { header: 'Sub Jenis Infrastruktur', key: 'subJenisInfra', width: 24 },
+    { header: 'Detail (Ruas Jalan/D.I./Kategori Bangunan)', key: 'detailInfra', width: 28 },
+    { header: 'Tingkat Kerusakan/Kondisi', key: 'kondisi', width: 20 },
+    { header: 'Data Rumah/Pemilik', key: 'dataRumah', width: 32 },
     { header: 'Deskripsi', key: 'deskripsi', width: 42 },
     { header: 'Foto', key: 'foto', width: 20 },
     { header: 'Link Semua Foto', key: 'linkFoto', width: 45 },
@@ -99,7 +132,7 @@ export async function exportExcel(laporanList, { onProgress } = {}) {
   });
 
   let gagalFoto = 0;
-  const KOLOM_FOTO_INDEX = 10; // 0-based: no,waktu,sumber,pelapor,hp,kab,kec,desa,koordinat,deskripsi,foto(10)
+  const KOLOM_FOTO_INDEX = 15; // 0-based, sejajar dengan urutan sheet.columns di atas
 
   for (let i = 0; i < laporanList.length; i++) {
     const lp = laporanList[i];
@@ -118,6 +151,14 @@ export async function exportExcel(laporanList, { onProgress } = {}) {
       lp.latitude != null && lp.longitude != null
         ? `${lp.latitude.toFixed(6)}, ${lp.longitude.toFixed(6)}`
         : '';
+    row.getCell('jenisInfra').value = lp.jenis_infrastruktur || '';
+    row.getCell('subJenisInfra').value = lp.sub_jenis_infrastruktur || '';
+    row.getCell('detailInfra').value = detailInfrastruktur(lp);
+    row.getCell('kondisi').value = kondisiKerusakan(lp);
+
+    const selDataRumah = row.getCell('dataRumah');
+    selDataRumah.value = dataRumahTeks(lp);
+    selDataRumah.alignment = { wrapText: true, vertical: 'top' };
 
     const selDeskripsi = row.getCell('deskripsi');
     selDeskripsi.value = lp.deskripsi || '';
@@ -219,6 +260,32 @@ export async function exportPdf(laporanList, { onProgress } = {}) {
         : '-';
     doc.text(`Koordinat: ${koordinatTeks}   ·   HP: ${lp.no_hp || '-'}`, marginX, y);
     y += 14;
+
+    if (lp.jenis_infrastruktur) {
+      const detail = detailInfrastruktur(lp);
+      const kondisi = kondisiKerusakan(lp);
+      let baris = lp.jenis_infrastruktur;
+      if (lp.sub_jenis_infrastruktur) baris += ` — ${lp.sub_jenis_infrastruktur}`;
+      if (detail) baris += ` (${detail})`;
+      if (kondisi) baris += `   ·   ${kondisi}`;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      const lines = doc.splitTextToSize(baris, pageWidth - marginX * 2);
+      doc.text(lines, marginX, y);
+      y += lines.length * 11 + 2;
+      doc.setFont('helvetica', 'normal');
+    }
+
+    const dataRumah = dataRumahTeks(lp);
+    if (dataRumah) {
+      doc.setFontSize(9);
+      doc.setTextColor(90, 90, 90);
+      const lines = doc.splitTextToSize(dataRumah.replace(/\n/g, '   ·   '), pageWidth - marginX * 2);
+      doc.text(lines, marginX, y);
+      y += lines.length * 11 + 4;
+      doc.setTextColor(0, 0, 0);
+    }
 
     if (lp.deskripsi) {
       const lines = doc.splitTextToSize(lp.deskripsi, pageWidth - marginX * 2);

@@ -1082,6 +1082,16 @@ textarea {
   margin: 0;
 }
 
+.kartu-laporan-koordinat-link {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.kartu-laporan-koordinat-link:hover {
+  color: var(--moss);
+}
+
 .kartu-laporan-kontak {
   font-size: 0.85rem;
   font-weight: 600;

@@ -239,17 +239,9 @@ export default function RiwayatLaporan({
                   {laporan.kabupaten_kota}
                 </p>
               )}
-              {laporan.latitude != null && laporan.longitude != null && (
-                <a
-                  href={`https://www.google.com/maps?q=${laporan.latitude},${laporan.longitude}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="kartu-laporan-koordinat kartu-laporan-koordinat-link"
-                  title="Lihat titik ini di Google Maps"
-                >
-                  {laporan.latitude.toFixed(6)}, {laporan.longitude.toFixed(6)}
-                </a>
-              )}
+              <p className="kartu-laporan-koordinat">
+                {laporan.latitude?.toFixed(6)}, {laporan.longitude?.toFixed(6)}
+              </p>
             </div>
 
             {laporan.jenis_infrastruktur && (

@@ -5,6 +5,42 @@ import Link from 'next/link';
 import { asetPublik } from '../lib/basePath';
 import { supabase } from '../lib/supabaseClient';
 import { IconUsers, IconLock, IconClipboard } from '../components/icons';
+import RiwayatLaporan from '../components/RiwayatLaporan';
+
+const NAMA_HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+const NAMA_BULAN = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+];
+
+function formatDuaDigit(angka) {
+  return String(angka).padStart(2, '0');
+}
+
+/**
+ * Jam & tanggal realtime di landing page — diperbarui setiap detik,
+ * mengikuti waktu perangkat pengguna (tanpa konversi zona waktu khusus).
+ */
+function JamRealtime() {
+  const [waktu, setWaktu] = useState(null);
+
+  useEffect(() => {
+    setWaktu(new Date());
+    const interval = setInterval(() => setWaktu(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!waktu) return null;
+
+  const teksTanggal = `${NAMA_HARI[waktu.getDay()]}, ${waktu.getDate()} ${NAMA_BULAN[waktu.getMonth()]} ${waktu.getFullYear()}`;
+  const teksJam = `${formatDuaDigit(waktu.getHours())}:${formatDuaDigit(waktu.getMinutes())}:${formatDuaDigit(waktu.getSeconds())}`;
+
+  return (
+    <p className="beranda-jam-realtime">
+      {teksTanggal} &middot; <span className="beranda-jam-angka">{teksJam}</span>
+    </p>
+  );
+}
 
 // Kabupaten se-Pulau Flores (barat -> timur) + Lembata, ditampilkan
 // sebagai titik berdenyut di sepanjang garis seismograf pada hero.
@@ -58,6 +94,7 @@ export default function HalamanBeranda() {
           <p className="beranda-eyebrow">
             <span className="beranda-titik-hidup" /> Tanggap Darurat &middot; Lapor PUPR NTT
           </p>
+          <JamRealtime />
           <h1 className="beranda-judul">
             Lapor dampak
             <br />
@@ -156,6 +193,14 @@ export default function HalamanBeranda() {
             <span className="beranda-tag-kunci">Perlu login</span>
           </Link>
         </div>
+        <section className="panel-riwayat beranda-riwayat-section">
+          <h2>Riwayat Laporan</h2>
+          <p className="panel-export-desc">
+            Arsip laporan lapangan yang sudah masuk dari warga se-Pulau Flores, bisa dilihat siapa
+            saja — tanpa perlu login.
+          </p>
+          <RiwayatLaporan />
+        </section>
       </main>
 
       <footer className="beranda-footer">

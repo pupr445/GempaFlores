@@ -1210,6 +1210,19 @@ textarea {
   100% { box-shadow: 0 0 0 0 rgba(255, 179, 140, 0); }
 }
 
+.beranda-jam-realtime {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: #cfe0e9;
+  margin: 0 0 14px;
+}
+
+.beranda-jam-angka {
+  color: #fff;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
 .beranda-judul {
   font-family: var(--font-display);
   font-weight: 700;
@@ -1631,6 +1644,10 @@ textarea {
 
 .panel-riwayat {
   margin-top: 4px;
+}
+
+.beranda-riwayat-section {
+  margin-top: 22px;
 }
 
 .riwayat-stat-kartu-survey .riwayat-stat-label {

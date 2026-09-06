@@ -199,7 +199,7 @@ export default function HalamanBeranda() {
             Arsip laporan lapangan yang sudah masuk dari warga se-Pulau Flores, bisa dilihat siapa
             saja — tanpa perlu login.
           </p>
-          <RiwayatLaporan />
+          <RiwayatLaporan includeSumberFilter />
         </section>
       </main>
 

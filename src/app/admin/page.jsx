@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import html2canvas from 'html2canvas';
 import AdminGuard from '../../components/AdminGuard';
 import AdminHeader from '../../components/AdminHeader';
 import RiwayatLaporan from '../../components/RiwayatLaporan';
@@ -332,6 +333,43 @@ function PanelPeta() {
   const [titikList, setTitikList] = useState(null); // null = belum dimuat
   const [filterJenis, setFilterJenis] = useState(OPSI_SEMUA_JENIS);
   const [kabupatenTerpilih, setKabupatenTerpilih] = useState('');
+  const [mengunduhGambar, setMengunduhGambar] = useState(false);
+  const petaRef = useRef(null);
+
+  const unduhPetaSebagaiGambar = useCallback(async () => {
+    if (!petaRef.current) return;
+    setMengunduhGambar(true);
+    setStatus({ jenis: 'info', pesan: 'Menyiapkan gambar peta…' });
+    try {
+      // Beri jeda sedikit supaya seluruh ubin (tile) peta yang masih
+      // dimuat sempat selesai render sebelum di-screenshot.
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const canvas = await html2canvas(petaRef.current, {
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        scale: 2,
+      });
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          setStatus({ jenis: 'error', pesan: 'Gagal membuat file gambar. Coba lagi.' });
+          setMengunduhGambar(false);
+          return;
+        }
+        const tanggal = new Date().toISOString().slice(0, 10);
+        unduhBlob(blob, `peta-sebaran-laporan-${tanggal}.png`);
+        setStatus({ jenis: 'sukses', pesan: 'Gambar peta berhasil diunduh.' });
+        setMengunduhGambar(false);
+      }, 'image/png');
+    } catch (err) {
+      console.error(err);
+      setStatus({
+        jenis: 'error',
+        pesan: 'Gagal mengekspor peta jadi gambar. Coba muat ulang halaman lalu ulangi.',
+      });
+      setMengunduhGambar(false);
+    }
+  }, []);
 
   const muatData = useCallback(async () => {
     setMemuat(true);
@@ -419,9 +457,19 @@ function PanelPeta() {
         <>
           <LegendaKerusakan />
 
-          <div className="peta-wrap-admin">
+          <div className="peta-wrap-admin" ref={petaRef}>
             <PetaSebaranLaporan titikList={titikList} />
           </div>
+
+          <button
+            type="button"
+            className="tombol-export tombol-unduh-peta"
+            onClick={unduhPetaSebagaiGambar}
+            disabled={mengunduhGambar}
+          >
+            {mengunduhGambar ? <IconLoader size={16} /> : <IconDownload size={16} />}
+            {mengunduhGambar ? 'Menyiapkan gambar…' : 'Unduh Peta sebagai Gambar'}
+          </button>
 
           <GrafikKerusakan judul="Ringkasan Tingkat Kerusakan (Semua Laporan)" rows={ringkasanTotal} />
 

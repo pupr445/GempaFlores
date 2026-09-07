@@ -36,6 +36,7 @@ export default function PetaSebaranLaporan({ titikList }) {
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        crossOrigin="anonymous"
       />
       <MarkerClusterGroup chunkedLoading maxClusterRadius={50}>
         {titikValid.map((t, i) => {

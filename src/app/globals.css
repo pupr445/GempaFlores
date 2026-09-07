@@ -1741,6 +1741,11 @@ textarea {
   background: var(--laut-deep);
 }
 
+.tombol-unduh-peta {
+  margin-top: -4px;
+  margin-bottom: 16px;
+}
+
 .tombol-export:disabled {
   background: #9fb3bd;
   cursor: not-allowed;

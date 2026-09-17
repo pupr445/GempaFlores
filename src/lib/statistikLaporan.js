@@ -40,7 +40,7 @@ export async function ambilTitikStatistik({ jenisInfrastruktur, onProgress } = {
     let query = supabase
       .from('laporan')
       .select(
-        'latitude, longitude, jenis_infrastruktur, sub_jenis_infrastruktur, tingkat_kerusakan, kondisi_rumah, kabupaten_kota, kecamatan'
+        'id, latitude, longitude, jenis_infrastruktur, sub_jenis_infrastruktur, tingkat_kerusakan, kondisi_rumah, kabupaten_kota, kecamatan'
       )
       .not('latitude', 'is', null)
       .not('longitude', 'is', null)

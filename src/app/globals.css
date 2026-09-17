@@ -1761,3 +1761,147 @@ textarea {
   color: var(--ink-soft);
   line-height: 1.5;
 }
+
+/* ---------- Detail laporan dari klik titik peta ---------- */
+
+.titik-laporan-klikable {
+  cursor: pointer;
+}
+
+.peta-sebaran-tooltip-hint {
+  color: var(--laut-deep);
+  font-size: 0.72rem;
+}
+
+.peta-petunjuk-klik {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.detail-laporan-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(15, 26, 22, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.detail-laporan-modal {
+  background: #fff;
+  border-radius: var(--radius-md);
+  width: min(620px, 100%);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.3);
+}
+
+.detail-laporan-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-laporan-modal-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.detail-laporan-tutup {
+  border: none;
+  background: transparent;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--ink-soft);
+  padding: 0 4px;
+}
+
+.detail-laporan-tutup:hover {
+  color: var(--ink);
+}
+
+.detail-laporan-modal-isi {
+  padding: 16px 18px 22px;
+  overflow-y: auto;
+}
+
+.detail-laporan-waktu {
+  margin: 0 0 14px;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.detail-laporan-blok {
+  margin-bottom: 18px;
+}
+
+.detail-laporan-blok h4 {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--laut-deep);
+}
+
+.detail-laporan-daftar {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px 16px;
+}
+
+.detail-laporan-daftar dt {
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  margin: 0 0 2px;
+}
+
+.detail-laporan-daftar dd {
+  margin: 0;
+  font-size: 0.88rem;
+  word-break: break-word;
+}
+
+.detail-laporan-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+.detail-laporan-deskripsi {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.detail-laporan-ringkas {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 480px) {
+  .detail-laporan-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .detail-laporan-modal {
+    max-height: 92vh;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+  }
+}

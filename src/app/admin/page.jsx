@@ -6,6 +6,7 @@ import html2canvas from 'html2canvas';
 import AdminGuard from '../../components/AdminGuard';
 import AdminHeader from '../../components/AdminHeader';
 import RiwayatLaporan from '../../components/RiwayatLaporan';
+import DetailLaporanPeta from '../../components/DetailLaporanPeta';
 import GrafikKerusakan, { LegendaKerusakan } from '../../components/GrafikKerusakan';
 import {
   IconDownload,
@@ -334,6 +335,8 @@ function PanelPeta() {
   const [filterJenis, setFilterJenis] = useState(OPSI_SEMUA_JENIS);
   const [kabupatenTerpilih, setKabupatenTerpilih] = useState('');
   const [mengunduhGambar, setMengunduhGambar] = useState(false);
+  // Titik laporan yang sedang dibuka detailnya (hasil klik marker di peta).
+  const [titikTerpilih, setTitikTerpilih] = useState(null);
   const petaRef = useRef(null);
 
   const unduhPetaSebagaiGambar = useCallback(async () => {
@@ -381,6 +384,7 @@ function PanelPeta() {
       const data = await ambilTitikStatistik({ jenisInfrastruktur: jenis, onProgress });
       setTitikList(data);
       setKabupatenTerpilih('');
+      setTitikTerpilih(null);
       setStatus({
         jenis: 'sukses',
         pesan: `Berhasil memuat ${data.length.toLocaleString('id-ID')} titik laporan yang punya koordinat.`,
@@ -457,8 +461,13 @@ function PanelPeta() {
         <>
           <LegendaKerusakan />
 
+          <p className="peta-petunjuk-klik">
+            Klik salah satu titik di peta untuk melihat data lengkap laporan beserta identitas
+            pelapornya.
+          </p>
+
           <div className="peta-wrap-admin" ref={petaRef}>
-            <PetaSebaranLaporan titikList={titikList} />
+            <PetaSebaranLaporan titikList={titikList} onPilihTitik={setTitikTerpilih} />
           </div>
 
           <button
@@ -498,6 +507,14 @@ function PanelPeta() {
             )}
           </div>
         </>
+      )}
+
+      {titikTerpilih && (
+        <DetailLaporanPeta
+          laporanId={titikTerpilih.id}
+          titikRingkas={titikTerpilih}
+          onTutup={() => setTitikTerpilih(null)}
+        />
       )}
     </section>
   );

@@ -16,8 +16,12 @@ const ZOOM_DEFAULT = 8;
  * Peta sebaran seluruh laporan yang punya koordinat, dikelompokkan
  * (cluster) supaya tetap ringan & terbaca walau jumlah titiknya puluhan
  * ribu. Tiap titik diwarnai sesuai tingkat kerusakannya.
+ *
+ * onPilihTitik(titik) opsional — dipanggil saat satu titik diklik, supaya
+ * pemanggil bisa menampilkan detail lengkap laporan (termasuk data
+ * pelapor) di panel/modal terpisah.
  */
-export default function PetaSebaranLaporan({ titikList }) {
+export default function PetaSebaranLaporan({ titikList, onPilihTitik }) {
   const titikValid = useMemo(
     () =>
       titikList.filter(
@@ -44,10 +48,24 @@ export default function PetaSebaranLaporan({ titikList }) {
           const warna = WARNA_KERUSAKAN[kondisi];
           return (
             <CircleMarker
-              key={i}
+              key={t.id ?? i}
               center={[t.latitude, t.longitude]}
               radius={6}
-              pathOptions={{ color: '#fff', weight: 1.5, fillColor: warna, fillOpacity: 0.9 }}
+              pathOptions={{
+                color: '#fff',
+                weight: 1.5,
+                fillColor: warna,
+                fillOpacity: 0.9,
+                // Kursor jadi "tangan" hanya kalau titiknya memang bisa diklik.
+                className: onPilihTitik ? 'titik-laporan-klikable' : undefined,
+              }}
+              eventHandlers={
+                onPilihTitik
+                  ? {
+                      click: () => onPilihTitik(t),
+                    }
+                  : undefined
+              }
             >
               <Tooltip direction="top" offset={[0, -6]}>
                 <div className="peta-sebaran-tooltip">
@@ -57,6 +75,12 @@ export default function PetaSebaranLaporan({ titikList }) {
                   {t.sub_jenis_infrastruktur ? ` — ${t.sub_jenis_infrastruktur}` : ''}
                   <br />
                   {[t.kecamatan, t.kabupaten_kota].filter(Boolean).join(', ')}
+                  {onPilihTitik && (
+                    <>
+                      <br />
+                      <em className="peta-sebaran-tooltip-hint">Klik untuk lihat detail laporan</em>
+                    </>
+                  )}
                 </div>
               </Tooltip>
             </CircleMarker>
